@@ -1,0 +1,14 @@
+model SmsRq {
+  id              Int       @id @default(autoincrement())
+  mobile          String
+  code            Int @db.SmallInt
+  ip              String
+  lastSentTime    DateTime
+  sendCount       Int @db.SmallInt   @default(1)
+  jwtToken        String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime? 
+
+  @@map("sms_rqs")
+}

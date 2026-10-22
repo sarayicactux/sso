@@ -1,0 +1,30 @@
+enum UserStatus {
+  Active
+  Inactive
+  Suspended
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  password  String
+  email     String    @unique
+  mobile    String    @unique @db.VarChar(11)
+  firstName String?
+  lastName  String?
+  roleId    Int
+  isActive  UserStatus   @default(Active)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  
+  // Relations
+  buyRequestsRequester  BuyRequest[] @relation("BuyRequestsRequester")
+  buyRequestsReviewer   BuyRequest[] @relation("BuyRequestsReviewer")
+  buyRequestsUser       BuyRequest[] @relation("BuyRequestsUser")
+  Role    Role   @relation(fields: [roleId], references: [id])
+  UserTokens     UserToken[]
+  Logs           Log[]
+  Products       Product[]
+  @@map("users")
+}

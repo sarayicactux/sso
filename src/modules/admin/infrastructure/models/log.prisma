@@ -1,0 +1,23 @@
+enum DatabaseAct {
+  CREATE
+  UPDATE
+  DELETE
+  READ
+}
+model Log {
+  id                  Int       @id @default(autoincrement())
+  adminId              Int
+  tableName           String?
+  rowId               Int?
+  act                 DatabaseAct  @default(CREATE)
+  oldData             Json?
+  newData             Json?
+  description         String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt           DateTime?
+
+  // Relations
+  User    User   @relation(fields: [adminId], references: [id])
+  @@map("logs")
+}
