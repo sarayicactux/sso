@@ -5,11 +5,11 @@ import { PrismaModule } from './prisma/prisma.module';
 // modules
 import { EventsModule } from './shared/event/events.module';
 
-import { UserModule } from './modules/user/user.module';
+import { AdminModule } from './modules/admin/admin.module';
 
-const modules = [UserModule, EventsModule];
+const modules = [AdminModule, EventsModule];
 //commands
-import { SeedUserCommand } from './shared/commands/seedUser.command';
+import { SeedAdminCommand } from './shared/commands/seedAdmin.command';
 
 import { LoggingMiddleware } from './shared/middlewares/logging.middleware';
 // import { LeakyService } from './shared/leakyService.service';
@@ -22,8 +22,8 @@ import { LoggingMiddleware } from './shared/middlewares/logging.middleware';
     PrismaModule,
     ...modules,
   ],
-  providers: [SeedUserCommand],
-  // providers: [SeedUserCommand, LeakyService],
+  providers: [SeedAdminCommand],
+  // providers: [SeedAdminCommand, LeakyService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

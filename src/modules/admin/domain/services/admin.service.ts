@@ -1,10 +1,11 @@
-import { Admin } from '../entities/admin.entity';
-import { LoginInterface } from '../interfaces/admin/loginAdmin.interface';
 import { RecoverPasswordInterface } from '../interfaces/admin/RecoverPassword.interface';
 import { UpdatePasswordInterface } from '../interfaces/admin/UpdatePassword.interface';
+import { LoginInterface } from '../interfaces/admin/loginAdmin.interface';
+import { AdminDto } from '../../presentation/dtos/admin.dto';
 
 export interface AdminServiceImpl {
-  login(login: LoginInterface, ip: string): Promise<Admin | null>;
+  seeder();
+  login(login: LoginInterface, ip: string): Promise<AdminDto | null>;
   updatePassword(
     mobile: string,
     updatePasswordDto: UpdatePasswordInterface,

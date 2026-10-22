@@ -1,14 +1,12 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { DeleteUserTokenCommand } from './delete.command';
-import { UserTokenRepository } from '../../../../infrastructure/repositories/userToken.repository';
+import { DeleteAdminTokenCommand } from './delete.command';
+import { AdminTokenRepository } from '../../../../infrastructure/repositories/adminToken.repository';
 
-@CommandHandler(DeleteUserTokenCommand)
-export class DeleteUserTokenHandler
-  implements ICommandHandler<DeleteUserTokenCommand>
-{
-  constructor(private readonly userTokenRepository: UserTokenRepository) {}
+@CommandHandler(DeleteAdminTokenCommand)
+export class DeleteAdminTokenHandler implements ICommandHandler<DeleteAdminTokenCommand> {
+  constructor(private readonly adminTokenRepository: AdminTokenRepository) {}
 
-  async execute(command: DeleteUserTokenCommand): Promise<boolean> {
-    return this.userTokenRepository.delete(command.access_token);
+  async execute(command: DeleteAdminTokenCommand): Promise<boolean> {
+    return this.adminTokenRepository.delete(command.access_token);
   }
 }

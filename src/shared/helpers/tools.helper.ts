@@ -4,10 +4,10 @@ import { Injectable } from '@nestjs/common';
 import { EventBus } from '@nestjs/cqrs';
 
 // import firebaseAdmin from '../../config/firebase';
-import { CreateLogInterface } from '../../modules/user/domain/interfaces/log/CreateLog.interface';
+import { CreateLogInterface } from '../../modules/admin/domain/interfaces/log/CreateLog.interface';
 
 //events
-import { CreateLogEvent } from '../../modules/user/application/events/log/createLog.event';
+import { CreateLogEvent } from '../../modules/admin/application/events/log/createLog.event';
 
 @Injectable()
 export class Tools {

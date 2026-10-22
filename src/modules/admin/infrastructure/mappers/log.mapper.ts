@@ -1,5 +1,5 @@
 ﻿import { LogDto } from '../../presentation/dtos/log.dto';
-import { UserMapper } from './user.mapper';
+import { AdminMapper } from './admin.mapper';
 import databaseActs from '../../../../shared/enums/databaseAct.enum';
 export class LogMapper {
   logObject(log): LogDto | null {
@@ -13,7 +13,7 @@ export class LogMapper {
       oldData: log.oldData,
       newData: log.newData,
       description: log.description,
-      User: log.User ? new UserMapper().userObject(log.User) : null,
+      Admin: log.Admin ? new AdminMapper().toAdminDto(log.Admin) : null,
       createdAt: log.createdAt,
       updatedAt: log.updatedAt,
     });

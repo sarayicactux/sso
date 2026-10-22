@@ -4,15 +4,16 @@ import { RecoverPasswordInterface } from '../interfaces/admin/RecoverPassword.in
 import { UpdatePasswordInterface } from '../interfaces/admin/UpdatePassword.interface';
 
 export interface AdminControllerImpl {
-  login(login: LoginInterface): Promise<Admin | null>;
+  login(login: LoginInterface, ip: string): Promise<Admin | null>;
   updatePassword(
-    mobile: string,
+    user: Admin,
     updatePasswordDto: UpdatePasswordInterface,
   ): Promise<boolean>;
-  forgetPassword(mobile: string): Promise<string | null>;
+  forgetPassword(body: { mobile: string }, ip: string): Promise<string | null>;
   recoverPassword(
+    headers: any,
     recoverPasswordDto: RecoverPasswordInterface,
     recoverPassToken: string,
   ): Promise<boolean>;
-  logOut(token: string): Promise<boolean>;
+  logOut(user: Admin): Promise<boolean>;
 }

@@ -18,6 +18,6 @@ model Log {
   deletedAt           DateTime?
 
   // Relations
-  User    User   @relation(fields: [adminId], references: [id])
+  Admin    Admin   @relation(fields: [adminId], references: [id])
   @@map("logs")
 }

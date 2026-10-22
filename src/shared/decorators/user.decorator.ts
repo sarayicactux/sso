@@ -6,11 +6,11 @@ import {
 } from '@nestjs/common';
 import { Jwt } from '../helpers/jwt.helper';
 import { PrismaService } from '../../prisma/prisma.service';
-import { UserMapper } from '../../modules/user/infrastructure/mappers/user.mapper';
+import { AdminMapper } from '../../modules/admin/infrastructure/mappers/admin.mapper';
 
 const jwt = new Jwt();
 const prismaService = new PrismaService();
-const userMapper = new UserMapper();
+const adminMapper = new AdminMapper();
 
 export const User = createParamDecorator(
   async (
@@ -30,10 +30,10 @@ export const User = createParamDecorator(
       );
     }
     const access_token = header.replace('Bearer ', '');
-    const userToken = await prismaService.findOne('userToken', {
+    const adminToken = await prismaService.findOne('adminToken', {
       where: { access_token: access_token },
     });
-    if (!userToken) {
+    if (!adminToken) {
       throw new HttpException(
         {
           status: HttpStatus.FORBIDDEN,
@@ -52,19 +52,14 @@ export const User = createParamDecorator(
         HttpStatus.FORBIDDEN,
       );
     }
-    const { adminId } = tokenValues;
-    const user = await prismaService.findByUnique('user', {
+    const { adminId } = tokenValues as { adminId: number };
+    const admin = await prismaService.findByUnique('admin', {
       where: { id: adminId, deletedAt: null },
       include: {
-        UserTokens: true,
-        Role: {
-          include: {
-            Permissions: true,
-          },
-        },
+        AdminTokens: true,
       },
     });
-    if (!user) {
+    if (!admin) {
       throw new HttpException(
         {
           status: HttpStatus.FORBIDDEN,
@@ -73,19 +68,7 @@ export const User = createParamDecorator(
         HttpStatus.FORBIDDEN,
       );
     }
-    if (data.roleCheck && user.roleId !== +process.env.ROLE_ID) {
-      const permissions = user.Role.Permissions;
-      if (!permissions.find((p) => p.operationId === data.operationId)) {
-        throw new HttpException(
-          {
-            status: HttpStatus.FORBIDDEN,
-            error: ' خطای دسترسی! شما مجوز این عملیات را ندارید ',
-          },
-          HttpStatus.FORBIDDEN,
-        );
-      }
-    }
 
-    return userMapper.userObject(user, userToken.access_token);
+    return adminMapper.toAdminDto(admin, adminToken.access_token);
   },
 );

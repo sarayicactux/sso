@@ -1,0 +1,16 @@
+model AdminToken {
+  id                  Int       @id @default(autoincrement())
+  device              String?
+  ip                  String?
+  access_token        String @db.VarChar(240)
+  fireBaseToken       String?
+  lastConfirmationId  Int? @db.SmallInt
+  adminId             Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt           DateTime? 
+  
+  // Relations
+  Admin    Admin   @relation(fields: [adminId], references: [id])
+  @@map("admin_tokens")
+}

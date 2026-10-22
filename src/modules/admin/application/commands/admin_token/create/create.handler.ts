@@ -1,13 +1,13 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { CreateUserTokenCommand } from './create.command';
-import { UserTokenRepository } from '../../../../infrastructure/repositories/userToken.repository';
-import { UserToken } from '../../../../domain/entities/adminToken.entity';
+import { CreateAdminTokenCommand } from './create.command';
+import { AdminTokenRepository } from '../../../../infrastructure/repositories/adminToken.repository';
+import { AdminToken } from '../../../../domain/entities/adminToken.entity';
 
-@CommandHandler(CreateUserTokenCommand)
-export class CreateUserTokenHandler implements ICommandHandler<CreateUserTokenCommand> {
-  constructor(private readonly userTokenRepository: UserTokenRepository) {}
+@CommandHandler(CreateAdminTokenCommand)
+export class CreateAdminTokenHandler implements ICommandHandler<CreateAdminTokenCommand> {
+  constructor(private readonly adminTokenRepository: AdminTokenRepository) {}
 
-  async execute(command: CreateUserTokenCommand): Promise<UserToken> {
-    return this.userTokenRepository.create(command.createUserToken);
+  async execute(command: CreateAdminTokenCommand): Promise<AdminToken> {
+    return this.adminTokenRepository.create(command.createAdminToken);
   }
 }

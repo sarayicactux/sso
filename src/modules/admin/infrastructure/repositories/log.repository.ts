@@ -19,13 +19,21 @@ export class LogRepository implements LogRepositoryImpl {
 
   async find(find: FindLogInterface): Promise<Log[]> {
     const where: any = {};
-    find?.adminId ? (where.adminId = find.adminId) : null;
-    find?.tableName ? (where.tableName = find.tableName) : null;
-    find?.act ? (where.act = find.act) : null;
+    if (find?.adminId) {
+      where.adminId = find.adminId;
+    }
+    if (find?.tableName) {
+      where.tableName = find.tableName;
+    }
+    if (find?.act) {
+      where.act = find.act;
+    }
+    const page = find?.page || 1;
+    const limit = find?.limit || 10;
     const logs = await this.prisma.findAll('log', {
       where,
-      skip: (find?.page || 0 - 1) * find.limit,
-      take: find.limit,
+      skip: (page - 1) * limit,
+      take: limit,
       orderBy: [
         {
           id: 'desc',

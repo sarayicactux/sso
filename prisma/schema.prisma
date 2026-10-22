@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Admin {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  password  String
+  email     String    @unique
+  mobile    String    @unique @db.VarChar(11)
+  firstName String?
+  lastName  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  AdminTokens AdminToken[]
+  Logs        Log[]
+
+  @@map("admins")
+}
+
+model AdminToken {
+  id                 Int       @id @default(autoincrement())
+  device             String?
+  ip                 String?
+  access_token       String    @db.VarChar(240)
+  fireBaseToken      String?
+  lastConfirmationId Int?      @db.SmallInt
+  adminId            Int
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
+
+  // Relations
+  Admin Admin @relation(fields: [adminId], references: [id])
+
+  @@map("admin_tokens")
+}
+
+enum DatabaseAct {
+  CREATE
+  UPDATE
+  DELETE
+  READ
+}
+
+model Log {
+  id          Int         @id @default(autoincrement())
+  adminId     Int
+  tableName   String?
+  rowId       Int?
+  act         DatabaseAct @default(CREATE)
+  oldData     Json?
+  newData     Json?
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+
+  // Relations
+  Admin Admin @relation(fields: [adminId], references: [id])
+
+  @@map("logs")
+}
+
+model SmsRq {
+  id           Int       @id @default(autoincrement())
+  mobile       String
+  code         Int       @db.SmallInt
+  ip           String
+  lastSentTime DateTime
+  sendCount    Int       @default(1) @db.SmallInt
+  jwtToken     String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  @@map("sms_rqs")
+}

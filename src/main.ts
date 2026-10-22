@@ -1,13 +1,13 @@
 import { NestFactory } from '@nestjs/core';
-import * as dotenv from 'dotenv';
-import * as express from 'express';
+import dotenv from 'dotenv';
+import express from 'express';
 import helmet from 'helmet';
 // import * as shell from 'shelljs';
 
 dotenv.config();
 
-import * as session from 'express-session';
-import * as cookieParser from 'cookie-parser';
+import session from 'express-session';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as swaggerConfig from './shared/config/swagger.json';

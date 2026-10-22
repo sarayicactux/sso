@@ -2,7 +2,7 @@ import { IsNotEmpty, IsOptional, IsInt, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Log } from '../../domain/entities/log.entity';
 import { DatabaseAct } from '../../../../shared/enums/databaseAct.enum';
-import { User } from '../../domain/entities/admin.entity';
+import { Admin } from '../../domain/entities/admin.entity';
 
 export class LogDto implements Log {
   @IsNotEmpty()
@@ -45,7 +45,7 @@ export class LogDto implements Log {
 
   @ApiProperty({ required: false })
   @IsOptional()
-  User: User;
+  Admin: Admin;
 
   @IsNotEmpty()
   @ApiProperty({ type: Date })
@@ -64,7 +64,7 @@ export class LogDto implements Log {
     oldData?: any;
     newData?: any;
     description?: string;
-    User?: User;
+    Admin?: Admin;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -76,7 +76,7 @@ export class LogDto implements Log {
     this.oldData = data.oldData;
     this.newData = data.newData;
     this.description = data.description;
-    this.User = data.User;
+    this.Admin = data.Admin;
     this.createdAt = data.createdAt || new Date();
     this.updatedAt = data.updatedAt || new Date();
   }
