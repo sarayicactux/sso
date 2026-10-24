@@ -16,5 +16,7 @@ model Media {
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
 
+  apps        App[]
+
   @@map("medias")
 }

@@ -1,4 +1,5 @@
 ﻿import { AppDto } from '../../presentation/dtos/app.dto';
+
 export class AppMapper {
   toAppDto(app, access_token: string | null = null): AppDto | null {
     if (!app) return null;
@@ -18,7 +19,7 @@ export class AppMapper {
       adminId: app.adminId,
       status: app.status,
       activeSession: app.activeSession,
-      accessToken: access_token,
+      accessToken: access_token ?? app.accessToken,
       createdAt: app.createdAt,
       updatedAt: app.updatedAt,
     });

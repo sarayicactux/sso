@@ -1,16 +1,8 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 
-import { AdminRepository } from './infrastructure/repositories/admin.repository';
-import { AdminTokenRepository } from './infrastructure/repositories/adminToken.repository';
-import { SmsRqRepository } from './infrastructure/repositories/smsRq.repository';
-import { LogRepository } from './infrastructure/repositories/log.repository';
-const repositories = [
-  AdminRepository,
-  AdminTokenRepository,
-  SmsRqRepository,
-  LogRepository,
-];
+import { AppRepository } from './infrastructure/repositories/app.repository';
+const repositories = [AppRepository];
 
 import { Jwt } from '../../shared/helpers/jwt.helper';
 import { Tools } from '../../shared/helpers/tools.helper';
@@ -23,9 +15,27 @@ const services = [AppService];
 
 import { PrismaService } from '../../prisma/prisma.service';
 
-const CommandHandlers = [];
+import { CreateAppHandler } from './application/commands/create/createApp.handler';
+import { UpdateAppHandler } from './application/commands/update/updateApp.handler';
+import { UpdateAppStatusHandler } from './application/commands/updateStatus/updateStatus.handler';
+import { UpdateAppActiveSessionHandler } from './application/commands/updateActiveSession/updateActiveSession.handler';
+import { UpdateAppAccessTokenHandler } from './application/commands/updateAccessToken/updateAccessToken.handler';
+const CommandHandlers = [
+  CreateAppHandler,
+  UpdateAppHandler,
+  UpdateAppStatusHandler,
+  UpdateAppActiveSessionHandler,
+  UpdateAppAccessTokenHandler,
+];
 
-const QueryHandlers = [];
+import { FindAppByIdHandler } from './application/queries/findById.handler';
+import { FindAppByAccessTokenHandler } from './application/queries/findByAccessToken.handler';
+import { FindAllAppsHandler } from './application/queries/findAll.handler';
+const QueryHandlers = [
+  FindAppByIdHandler,
+  FindAppByAccessTokenHandler,
+  FindAllAppsHandler,
+];
 
 import { AppMapper } from './infrastructure/mappers/app.mapper';
 const mappers = [AppMapper];
@@ -43,6 +53,6 @@ const mappers = [AppMapper];
     Tools,
     ...mappers,
   ],
-  exports: [AdminRepository, AppService],
+  exports: [AppRepository, AppService],
 })
 export class AppsModule {}

@@ -1,7 +1,8 @@
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
 import { CreateAppInterface } from '../../domain/interfaces/app/CreateApp.interface';
+import { UpdateAppInterface } from '../../domain/interfaces/app/UpdateApp.interface';
 import { App } from '../../domain/entities/app.entity';
 import { MediaInterface } from '../../../media/domain/interfaces/Media.interface';
 
@@ -21,6 +22,41 @@ export class CreateAppDto implements CreateAppInterface {
   @IsOptional()
   @ApiProperty({ type: Number, required: false })
   mediaId?: number;
+}
+
+export class UpdateAppDto implements UpdateAppInterface {
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ type: String, required: false })
+  title?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ type: String, required: false })
+  description?: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({ type: String })
+  url: string;
+
+  @IsOptional()
+  @ApiProperty({ type: Number, required: false })
+  mediaId?: number;
+}
+
+export class UpdateAppStatusDto {
+  @IsNotEmpty()
+  @IsBoolean()
+  @ApiProperty({ type: Boolean })
+  status: boolean;
+}
+
+export class UpdateAppActiveSessionDto {
+  @IsNotEmpty()
+  @IsBoolean()
+  @ApiProperty({ type: Boolean })
+  activeSession: boolean;
 }
 
 export class AppDto implements Partial<App> {

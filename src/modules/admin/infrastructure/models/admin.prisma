@@ -14,5 +14,6 @@ model Admin {
   // Relations
   AdminTokens     AdminToken[]
   Logs           Log[]
+  apps           App[]
   @@map("admins")
 }
