@@ -6,8 +6,9 @@ import { PrismaModule } from './prisma/prisma.module';
 import { EventsModule } from './shared/event/events.module';
 
 import { AdminModule } from './modules/admin/admin.module';
+import { MediaModule } from './modules/media/media.module';
 
-const modules = [AdminModule, EventsModule];
+const modules = [AdminModule, MediaModule, EventsModule];
 //commands
 import { SeedAdminCommand } from './shared/commands/seedAdmin.command';
 

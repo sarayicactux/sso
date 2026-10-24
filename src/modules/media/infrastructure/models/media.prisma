@@ -1,0 +1,20 @@
+enum MimeType {
+  IMAGE
+  VIDEO
+  MUSIC
+  DOCUMENT
+  APP
+  OTHER
+}
+model Media {
+  id          Int       @id @default(autoincrement())
+  mediaUrl    String
+  ownerId     Int?
+  ownerModel  String?
+  mimeType    MimeType
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@map("medias")
+}

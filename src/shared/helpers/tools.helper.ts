@@ -8,6 +8,7 @@ import { CreateLogInterface } from '../../modules/admin/domain/interfaces/log/Cr
 
 //events
 import { CreateLogEvent } from '../../modules/admin/application/events/log/createLog.event';
+import { MimeType } from '../enums/mimeType.enum';
 
 @Injectable()
 export class Tools {
@@ -102,6 +103,27 @@ export class Tools {
     str = str.replace(/۸/g, '8');
     str = str.replace(/۹/g, '9');
     return str;
+  }
+  checkMime(filename: string) {
+    const i = filename.lastIndexOf('.');
+    const memeType = filename.substr(i + 1);
+    const imgList = ['jpg', 'jpeg', 'png', 'gif', 'JPG', 'JPEG', 'PNG', 'GIF'];
+    const videoList = ['mp4', 'MP4'];
+    const musicList = ['mp3', 'MP3'];
+    const appFile = ['apk', 'exe', 'msi'];
+    const docFile = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'ppt', 'pptx'];
+    if (imgList.indexOf(memeType) !== -1) {
+      return MimeType.IMAGE;
+    } else if (videoList.indexOf(memeType) !== -1) {
+      return MimeType.VIDEO;
+    } else if (appFile.indexOf(memeType) !== -1) {
+      return MimeType.APP;
+    } else if (musicList.indexOf(memeType) !== -1) {
+      return MimeType.MUSIC;
+    } else if (docFile.indexOf(memeType) !== -1) {
+      return MimeType.DOCUMENT;
+    }
+    return MimeType.OTHER;
   }
   saveLogs(createLog: CreateLogInterface) {
     try {

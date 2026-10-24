@@ -92,11 +92,11 @@ export class AdminController implements AdminControllerImpl {
   @Get('dash')
   @HttpCode(HttpStatus.OK)
   async dash(
-    @Admin({ operationId: 'adminDashboard' }) user: AdminDto,
+    @Admin({ operationId: 'adminDashboard' }) admin: AdminDto,
   ): Promise<AdminDto> {
-    return user;
+    return admin;
   }
-  // logOut user ********************************************************
+  // logOut admin ********************************************************
   @ApiOkResponse({
     description: 'logOut',
     type: Boolean,
@@ -111,7 +111,7 @@ export class AdminController implements AdminControllerImpl {
     name: 'authorization Bearer ',
     description: 'this token recieved in login',
   })
-  @ApiNotFoundResponse({ description: 'unitUser not found' })
+  @ApiNotFoundResponse({ description: 'admin not found' })
   @ApiInternalServerErrorResponse({
     description: 'logout faild',
   })
@@ -119,10 +119,10 @@ export class AdminController implements AdminControllerImpl {
   @ApiBearerAuth()
   @Get('logOut')
   async logOut(
-    @Admin({ operationId: 'adminLogOut' }) user: AdminDto,
+    @Admin({ operationId: 'adminLogOut' }) admin: AdminDto,
   ): Promise<boolean> {
     try {
-      await this.adminService.logOut(user.access_token);
+      await this.adminService.logOut(admin.access_token);
       return true;
     } catch (err) {
       throw err;
@@ -152,11 +152,11 @@ export class AdminController implements AdminControllerImpl {
   @HttpCode(HttpStatus.OK)
   async updatePassword(
     @Admin({ operationId: 'adminUpdatePassword' })
-    user: AdminDto,
+    admin: AdminDto,
     @Body() updatePasswordDto: UpdatePasswordDto,
   ) {
     try {
-      await this.adminService.updatePassword(user.mobile, updatePasswordDto);
+      await this.adminService.updatePassword(admin.mobile, updatePasswordDto);
       return true;
     } catch (err) {
       throw err;
@@ -165,14 +165,14 @@ export class AdminController implements AdminControllerImpl {
 
   // forgetPassword ************************************
   @ApiOkResponse({
-    description: 'user forget password',
+    description: 'admin forget password',
     type: [String],
   })
   @ApiOperation({
     summary: ' مرحله اول فراموش رمز عبور ',
-    operationId: 'userForgetPassword',
+    operationId: 'adminForgetPassword',
     description: 'this operation is public',
-    tags: ['user'],
+    tags: ['admin'],
   })
   @ApiBody({
     schema: {
@@ -180,10 +180,10 @@ export class AdminController implements AdminControllerImpl {
       properties: {
         mobile: { type: 'string' },
       },
-      description: 'update user password',
+      description: 'update admin password',
     },
   })
-  @ApiNotFoundResponse({ description: 'user not found' })
+  @ApiNotFoundResponse({ description: 'admin not found' })
   @ApiInternalServerErrorResponse({
     description: 'recovery faild',
   })
@@ -207,16 +207,16 @@ export class AdminController implements AdminControllerImpl {
   }
   // recover Password ************************************
   @ApiOkResponse({
-    description: 'user recover password',
+    description: 'admin recover password',
     type: AdminDto,
   })
   @ApiOperation({
     summary: ' مرحله دوم فراموش رمز عبور ',
-    operationId: 'userRecoverPassword',
+    operationId: 'adminRecoverPassword',
     description: 'this operation is public',
-    tags: ['user'],
+    tags: ['admin'],
   })
-  @ApiNotFoundResponse({ description: 'user not found' })
+  @ApiNotFoundResponse({ description: 'admin not found' })
   @ApiInternalServerErrorResponse({
     description: 'recovery faild',
   })
@@ -226,7 +226,7 @@ export class AdminController implements AdminControllerImpl {
   })
   @ApiBody({
     type: RecoverPasswordDto,
-    description: 'recover user password DTO',
+    description: 'recover admin password DTO',
   })
   @UsePipes(new CodePipe())
   @Patch('recoverPass')
