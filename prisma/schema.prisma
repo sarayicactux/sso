@@ -21,6 +21,7 @@ model Admin {
   // Relations
   AdminTokens AdminToken[]
   Logs        Log[]
+  apps        App[]
 
   @@map("admins")
 }
@@ -84,6 +85,27 @@ model SmsRq {
   @@map("sms_rqs")
 }
 
+model App {
+  id            Int       @id @default(autoincrement())
+  title         String    @unique
+  description   String
+  url           String    @unique
+  mediaId       Int?
+  adminId       Int
+  status        Boolean?  @default(true)
+  activeSession Boolean?  @default(true)
+  accessToken   String?   @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  // Relations
+  Media Media? @relation(fields: [mediaId], references: [id])
+  Admin Admin  @relation(fields: [adminId], references: [id])
+
+  @@map("apps")
+}
+
 enum MimeType {
   IMAGE
   VIDEO
@@ -102,6 +124,7 @@ model Media {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   deletedAt  DateTime?
+  apps       App[]
 
   @@map("medias")
 }
