@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import dotenv from 'dotenv';
 import express from 'express';
 import helmet from 'helmet';
+import { join } from 'path';
 // import * as shell from 'shelljs';
 
 dotenv.config();
@@ -13,6 +14,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as swaggerConfig from './shared/config/swagger.json';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import pathes from './shared/config/pathes';
 import inRoleRoutes from './shared/config/inRoleRoutes';
 // import { NotFoundFilter } from './common/helpers/notFound.helper';
@@ -21,6 +23,20 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     cors: true,
   });
+
+  const grpcPort = process.env.GRPC_PORT || '23001';
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.GRPC,
+    options: {
+      package: 'user',
+      protoPath: join(__dirname, 'modules/user/presentation/grpc/user.proto'),
+      url: `localhost:${grpcPort}`, // آی پی سرور و پورت gRPC را مشخص کنید
+      loader: {
+        keepCase: true,
+      },
+    },
+  });
+  await app.startAllMicroservices();
   app.enableCors({
     origin: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
@@ -85,5 +101,7 @@ async function bootstrap() {
     SwaggerModule.setup('api', app, document);
   }
   await app.listen(process.env.APP_PORT);
+  console.log(`HTTP listening on ${process.env.APP_PORT}`);
+  console.log(`gRPC listening on ${grpcPort}`);
 }
 bootstrap();

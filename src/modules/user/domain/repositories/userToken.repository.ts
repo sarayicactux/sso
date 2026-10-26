@@ -3,5 +3,6 @@ import { CreateUserTokenInterface } from '../interfaces/user_token/CreateUserTok
 
 export interface UserTokenRepositoryImpl {
   create(data: CreateUserTokenInterface): Promise<UserToken>;
+  findByAccessToken(access_token: string): Promise<UserToken | null>;
   delete(access_token: string): Promise<boolean>;
 }

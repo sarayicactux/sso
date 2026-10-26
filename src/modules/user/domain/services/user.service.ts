@@ -3,6 +3,7 @@ import { UpdatePasswordInterface } from '../interfaces/user/UpdatePassword.inter
 import { LoginUserInterface } from '../interfaces/user/LoginUser.interface';
 import { CreateUserInterface } from '../interfaces/user/CreateUser.interface';
 import { RevokeUserAppInterface } from '../interfaces/user/RevokeUserApp.interface';
+import { ValidateUserAppAccessInterface } from '../interfaces/user/ValidateUserAppAccess.interface';
 import { UserDto } from '../../presentation/dtos/user.dto';
 
 export interface UserServiceImpl {
@@ -20,4 +21,5 @@ export interface UserServiceImpl {
     ip: string,
   ): Promise<boolean>;
   logOut(token: string): Promise<boolean>;
+  validateUserAppAccess(data: ValidateUserAppAccessInterface): Promise<boolean>;
 }

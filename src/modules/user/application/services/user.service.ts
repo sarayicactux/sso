@@ -31,12 +31,15 @@ import { GetUserByUsernameQuery } from '../queries/user/getUserByUsername.query'
 import { GetUserQuery } from '../queries/user/getUser.query';
 import { FindUserAppByUserIdAndAppIdQuery } from '../queries/user_app/findByUserIdAndAppId.query';
 import { FindAppsByUserIdQuery } from '../queries/user_app/findAppsByUserId.query';
+import { FindUserTokenByAccessTokenQuery } from '../queries/user_token/findByAccessToken.query';
 import { User } from '../../domain/entities/user.entity';
+import { UserToken } from '../../domain/entities/userToken.entity';
 import { App } from '../../../app/domain/entities/app.entity';
 import { UpdateUserPasswordCommand } from '../commands/user/update/updatePassword.command';
 import { CreateUserCommand } from '../commands/user/create/createUser.command';
 import { CreateUserAppCommand } from '../commands/user_app/create/createUserApp.command';
 import { DeleteUserAppCommand } from '../commands/user_app/delete/deleteUserApp.command';
+import { ValidateUserAppAccessInterface } from '../../domain/interfaces/user/ValidateUserAppAccess.interface';
 
 @Injectable()
 export class UserService implements UserServiceImpl {
@@ -373,5 +376,54 @@ export class UserService implements UserServiceImpl {
   async logOut(token: string): Promise<boolean> {
     await this.commandBus.execute(new DeleteUserTokenCommand(token));
     return true;
+  }
+
+  async validateUserAppAccess(
+    data: ValidateUserAppAccessInterface,
+  ): Promise<boolean> {
+    try {
+      const { accessToken, access_token } = data;
+      if (!accessToken || !access_token) {
+        return false;
+      }
+
+      const app = (await this.queryBus.execute(
+        new FindAppByAccessTokenQuery(accessToken),
+      )) as App | null;
+      if (!app || app.status !== true) {
+        return false;
+      }
+
+      const userToken = (await this.queryBus.execute(
+        new FindUserTokenByAccessTokenQuery(access_token),
+      )) as UserToken | null;
+      if (!userToken) {
+        return false;
+      }
+
+      const tokenValues = this.jwt.verifier(access_token);
+      if (!tokenValues) {
+        return false;
+      }
+
+      const { userId } = tokenValues as { userId: number };
+      if (!userId || userToken.userId !== userId) {
+        return false;
+      }
+
+      const user = (await this.queryBus.execute(
+        new GetUserQuery(userId),
+      )) as User | null;
+      if (!user) {
+        return false;
+      }
+
+      const link = await this.queryBus.execute(
+        new FindUserAppByUserIdAndAppIdQuery(user.id, app.id),
+      );
+      return !!link;
+    } catch {
+      return false;
+    }
   }
 }

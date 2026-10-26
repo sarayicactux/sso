@@ -10,7 +10,8 @@ import { Jwt } from '../../shared/helpers/jwt.helper';
 import { Tools } from '../../shared/helpers/tools.helper';
 
 import { UserController } from './presentation/controllers/user.controller';
-const controllers = [UserController];
+import { UserGrpcController } from './presentation/grpc/user.grpc.controller';
+const controllers = [UserController, UserGrpcController];
 
 import { UserService } from './application/services/user.service';
 const services = [UserService];
@@ -38,6 +39,7 @@ import { GetUserHandler } from './application/queries/user/getUser.handler';
 import { GetUserByEmailHandler } from './application/queries/user/getUserByEmail.handler';
 import { FindUserAppByUserIdAndAppIdHandler } from './application/queries/user_app/findByUserIdAndAppId.handler';
 import { FindAppsByUserIdHandler } from './application/queries/user_app/findAppsByUserId.handler';
+import { FindUserTokenByAccessTokenHandler } from './application/queries/user_token/findByAccessToken.handler';
 const QueryHandlers = [
   GetUserByMobileHandler,
   GetUserByUsernameHandler,
@@ -45,6 +47,7 @@ const QueryHandlers = [
   GetUserHandler,
   FindUserAppByUserIdAndAppIdHandler,
   FindAppsByUserIdHandler,
+  FindUserTokenByAccessTokenHandler,
 ];
 
 import { UserMapper } from './infrastructure/mappers/user.mapper';

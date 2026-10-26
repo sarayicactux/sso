@@ -16,6 +16,13 @@ export class UserTokenRepository implements UserTokenRepositoryImpl {
     return newToken as UserToken;
   }
 
+  async findByAccessToken(access_token: string): Promise<UserToken | null> {
+    const token = await this.prisma.findOne('userToken', {
+      where: { access_token },
+    });
+    return token as UserToken | null;
+  }
+
   async delete(access_token: string): Promise<boolean> {
     await this.prisma.forceDelete('userToken', { access_token });
     return true;

@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package user;
+
+service UserGrpcService {
+  rpc ValidateUserAppAccess (ValidateUserAppAccessRequest) returns (ValidateUserAppAccessResponse);
+}
+
+message ValidateUserAppAccessRequest {
+  string accessToken = 1;
+  string access_token = 2;
+}
+
+message ValidateUserAppAccessResponse {
+  bool valid = 1;
+}
