@@ -10,6 +10,8 @@ import {
   Patch,
   Headers,
   Delete,
+  Param,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { UserControllerImpl } from '../../domain/controllers/user.controller.interface';
 import { UserService } from '../../application/services/user.service';
@@ -20,6 +22,7 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiTags,
 } from '@nestjs/swagger';
 import {
   LoginDto,
@@ -27,8 +30,11 @@ import {
   UpdatePasswordDto,
   CreateUserDto,
   RevokeUserAppDto,
+  UpdateUserStatusDto,
+  AssociateUserAppDto,
   UserDto,
 } from '../dtos/user.dto';
+import { AppDto } from '../../../app/presentation/dtos/app.dto';
 
 import { MobilePipe } from '../../../../shared/pipes/mobile.pipe';
 import { IpAddress } from '../../../../shared/decorators/ipaddress.decorator';
@@ -36,10 +42,11 @@ import { CodePipe } from '../../../../shared/pipes/code.pipe';
 import { User } from '../../../../shared/decorators/user.decorator';
 import { Admin } from '../../../../shared/decorators/admin.decorator';
 
+@ApiTags('users')
 @Controller('users')
 export class UserController implements UserControllerImpl {
   constructor(private readonly userService: UserService) {}
-  // create new user or grant access to an existing user
+
   @ApiOperation({
     summary: 'Create user or grant app access',
     operationId: 'userCreate',
@@ -54,31 +61,125 @@ export class UserController implements UserControllerImpl {
     return this.userService.create(createUserDto);
   }
 
-  // revoke user access to an app
+  @ApiOperation({
+    summary: 'List users (admin)',
+    operationId: 'findAllUsers',
+    description: 'Admin-only list of users with associated applications',
+    tags: ['user'],
+  })
+  @ApiOkResponse({ type: [UserDto] })
+  @ApiBearerAuth()
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  async findAll(
+    @Admin({ operationId: 'findAllUsers' }) admin,
+  ): Promise<UserDto[]> {
+    void admin;
+    return this.userService.findAllForAdmin();
+  }
+
+  @ApiOperation({
+    summary: 'Update user status (admin)',
+    operationId: 'updateUserStatus',
+    description: 'Activate or deactivate a user',
+    tags: ['user'],
+  })
+  @ApiOkResponse({ type: UserDto })
+  @ApiBody({ type: UpdateUserStatusDto })
+  @ApiBearerAuth()
+  @Patch(':id/status')
+  @HttpCode(HttpStatus.OK)
+  async updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateUserStatusDto,
+    @Admin({ operationId: 'updateUserStatus' }) admin,
+  ): Promise<UserDto> {
+    return this.userService.updateStatus({ id, status: body.status }, admin);
+  }
+
+  @ApiOperation({
+    summary: 'List applications for a user (admin)',
+    operationId: 'findUserApps',
+    description: 'Admin-only list of apps associated with a user',
+    tags: ['user'],
+  })
+  @ApiOkResponse({ type: [AppDto] })
+  @ApiBearerAuth()
+  @Get(':id/apps')
+  @HttpCode(HttpStatus.OK)
+  async getUserApps(
+    @Param('id', ParseIntPipe) id: number,
+    @Admin({ operationId: 'findUserApps' }) admin,
+  ): Promise<AppDto[]> {
+    void admin;
+    return this.userService.getUserApps(id);
+  }
+
   @ApiOperation({
     summary: 'Revoke user access to an app',
     operationId: 'userRevokeApp',
-    description: 'this operation is public',
+    description: 'Revoke via app accessToken (admin-authenticated)',
     tags: ['user'],
   })
   @ApiOkResponse({ description: 'revoke successful', type: Boolean })
   @ApiNotFoundResponse({ description: 'user app link not found' })
   @ApiBody({ type: RevokeUserAppDto })
+  @ApiBearerAuth()
   @Delete('apps')
   @HttpCode(HttpStatus.OK)
   async revokeAppAccess(
     @Body() revokeDto: RevokeUserAppDto,
-    @Admin({ operationId: 'createApp' }) admin,
+    @Admin({ operationId: 'userRevokeApp' }) admin,
   ): Promise<boolean> {
     void admin;
     return this.userService.revokeAppAccess(revokeDto);
   }
 
-  // login user
+  @ApiOperation({
+    summary: 'Associate application with user (admin)',
+    operationId: 'associateUserApp',
+    description: 'Link an existing application to a user',
+    tags: ['user'],
+  })
+  @ApiOkResponse({ type: UserDto })
+  @ApiBody({ type: AssociateUserAppDto })
+  @ApiBearerAuth()
+  @Post(':id/apps')
+  @HttpCode(HttpStatus.OK)
+  async associateApp(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: AssociateUserAppDto,
+    @Admin({ operationId: 'associateUserApp' }) admin,
+  ): Promise<UserDto> {
+    return this.userService.associateApp(
+      { userId: id, appId: body.appId },
+      admin,
+    );
+  }
+
+  @ApiOperation({
+    summary: 'Remove application association (admin)',
+    operationId: 'removeUserApp',
+    description: 'Unlink an application from a user without deleting either',
+    tags: ['user'],
+  })
+  @ApiOkResponse({ type: Boolean })
+  @ApiNotFoundResponse({ description: 'user app link not found' })
+  @ApiBearerAuth()
+  @Delete(':id/apps/:appId')
+  @HttpCode(HttpStatus.OK)
+  async removeUserApp(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('appId', ParseIntPipe) appId: number,
+    @Admin({ operationId: 'removeUserApp' }) admin,
+  ): Promise<boolean> {
+    return this.userService.removeUserApp(id, appId, admin);
+  }
+
   @ApiOperation({
     summary: 'User login',
     operationId: 'userLogin',
-    description: 'this operation is public',
+    description: 'Authenticate with username and password',
     tags: ['user'],
   })
   @ApiOkResponse({ description: 'user login successful', type: UserDto })
@@ -92,11 +193,10 @@ export class UserController implements UserControllerImpl {
     return this.userService.login(loginDto, ip);
   }
 
-  // user dashboard
   @ApiOperation({
     summary: 'User dashboard',
     operationId: 'userDashboard',
-    description: 'this operation is public',
+    description: 'Authenticated user profile and apps',
     tags: ['user'],
   })
   @ApiHeader({
@@ -112,12 +212,12 @@ export class UserController implements UserControllerImpl {
   ): Promise<UserDto> {
     return this.userService.getDashboard(user.id, user.access_token);
   }
-  // log out user
+
   @ApiOkResponse({ description: 'logOut', type: Boolean })
   @ApiOperation({
     summary: 'User logout',
     operationId: 'userLogOut',
-    description: 'this operation is public',
+    description: 'Invalidate current user token',
     tags: ['user'],
   })
   @ApiBearerAuth()
@@ -129,11 +229,11 @@ export class UserController implements UserControllerImpl {
     await this.userService.logOut(user.access_token);
     return true;
   }
-  // update user password
+
   @ApiOperation({
     summary: 'Update user password',
     operationId: 'userUpdatePassword',
-    description: 'this operation is public',
+    description: 'Authenticated password change',
     tags: ['user'],
   })
   @ApiOkResponse({ description: 'update password', type: Boolean })
@@ -148,7 +248,7 @@ export class UserController implements UserControllerImpl {
     await this.userService.updatePassword(user.mobile, updatePasswordDto);
     return true;
   }
-  // forget password
+
   @ApiOkResponse({
     description: 'user forget password',
     type: [String],
@@ -178,7 +278,7 @@ export class UserController implements UserControllerImpl {
     const recoverPassToken = await this.userService.forgetPassword(mobile, ip);
     return { recoverPassToken };
   }
-  // recover password
+
   @ApiOkResponse({ description: 'user recover password', type: Boolean })
   @ApiOperation({
     summary: 'Forgot password — recover with code',

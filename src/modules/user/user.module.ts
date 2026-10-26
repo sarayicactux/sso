@@ -20,6 +20,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 
 import { CreateUserHandler } from './application/commands/user/create/createUser.handler';
 import { UpdateUserPasswordHandler } from './application/commands/user/update/updatePassword.handler';
+import { UpdateUserStatusHandler } from './application/commands/user/update/updateStatus.handler';
 import { CreateUserTokenHandler } from './application/commands/user_token/create/create.handler';
 import { DeleteUserTokenHandler } from './application/commands/user_token/delete/delete.handler';
 import { CreateUserAppHandler } from './application/commands/user_app/create/createUserApp.handler';
@@ -27,6 +28,7 @@ import { DeleteUserAppHandler } from './application/commands/user_app/delete/del
 const CommandHandlers = [
   CreateUserHandler,
   UpdateUserPasswordHandler,
+  UpdateUserStatusHandler,
   CreateUserTokenHandler,
   DeleteUserTokenHandler,
   CreateUserAppHandler,
@@ -37,6 +39,7 @@ import { GetUserByMobileHandler } from './application/queries/user/getUserByMobi
 import { GetUserByUsernameHandler } from './application/queries/user/getUserByUsername.handler';
 import { GetUserHandler } from './application/queries/user/getUser.handler';
 import { GetUserByEmailHandler } from './application/queries/user/getUserByEmail.handler';
+import { FindAllUsersWithAppsHandler } from './application/queries/user/findAllWithApps.handler';
 import { FindUserAppByUserIdAndAppIdHandler } from './application/queries/user_app/findByUserIdAndAppId.handler';
 import { FindAppsByUserIdHandler } from './application/queries/user_app/findAppsByUserId.handler';
 import { FindUserTokenByAccessTokenHandler } from './application/queries/user_token/findByAccessToken.handler';
@@ -45,6 +48,7 @@ const QueryHandlers = [
   GetUserByUsernameHandler,
   GetUserByEmailHandler,
   GetUserHandler,
+  FindAllUsersWithAppsHandler,
   FindUserAppByUserIdAndAppIdHandler,
   FindAppsByUserIdHandler,
   FindUserTokenByAccessTokenHandler,

@@ -8,6 +8,7 @@ import {
   IsNumberString,
   IsString,
   IsArray,
+  IsBoolean,
 } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
@@ -19,11 +20,25 @@ import { CreateUserInterface } from '../../domain/interfaces/user/CreateUser.int
 import { RevokeUserAppInterface } from '../../domain/interfaces/user/RevokeUserApp.interface';
 import { AppDto } from '../../../app/presentation/dtos/app.dto';
 
+export class UpdateUserStatusDto {
+  @IsNotEmpty()
+  @IsBoolean()
+  @ApiProperty({ type: Boolean })
+  status: boolean;
+}
+
+export class AssociateUserAppDto {
+  @IsNotEmpty()
+  @IsInt()
+  @ApiProperty({ type: Number })
+  appId: number;
+}
+
 export class LoginDto implements LoginUserInterface {
-  @ApiProperty()
-  @IsNumberString()
-  @IsMobilePhone()
-  mobile?: string;
+  @ApiProperty({ description: 'Unique username used for login' })
+  @IsNotEmpty()
+  @IsString()
+  username: string;
 
   @ApiProperty()
   @IsNotEmpty()
@@ -131,6 +146,11 @@ export class UserDto implements Partial<User> {
   @IsMobilePhone()
   mobile: string;
 
+  @IsNotEmpty()
+  @IsBoolean()
+  @ApiProperty({ type: Boolean })
+  status: boolean;
+
   @IsOptional()
   @ApiProperty({ type: String, required: false })
   access_token: string;
@@ -155,6 +175,7 @@ export class UserDto implements Partial<User> {
     lastName: string;
     email: string;
     mobile: string;
+    status?: boolean;
     access_token?: string;
     apps?: AppDto[];
     createdAt?: Date;
@@ -166,6 +187,7 @@ export class UserDto implements Partial<User> {
     this.lastName = data.lastName;
     this.email = data.email;
     this.mobile = data.mobile;
+    this.status = data.status !== false;
     this.access_token = data.access_token;
     this.apps = data.apps;
     this.createdAt = data.createdAt || new Date();

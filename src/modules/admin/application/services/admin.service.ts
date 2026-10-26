@@ -23,6 +23,7 @@ import { SoftDeleteCommand } from '../commands/sms_rq/delete/softDelete.command'
 import { GetOneSmsRqQuery } from '../queries/sms_rq/getOne.query';
 
 import { GetAdminByMobileQuery } from '../queries/admin/GetAdminByMobile.query';
+import { GetAdminByUsernameQuery } from '../queries/admin/getAdminByUsername.query';
 import { Admin } from '../../domain/entities/admin.entity';
 import { UpdatePasswordCommand } from '../commands/admin/update/updatePassword.command';
 import { CreateAdminCommand } from '../commands/admin/create/createAdmin.command';
@@ -38,9 +39,9 @@ export class AdminService implements AdminServiceImpl {
   ) {}
 
   async login(loginDto: LoginDto, ip: string): Promise<AdminDto> {
-    const { mobile, password } = loginDto;
+    const { username, password } = loginDto;
     const admin = (await this.queryBus.execute(
-      new GetAdminByMobileQuery(mobile),
+      new GetAdminByUsernameQuery(username),
     )) as Admin;
     if (!admin) {
       throw new HttpException(
@@ -55,6 +56,7 @@ export class AdminService implements AdminServiceImpl {
       const tokenValues = {
         adminId: admin.id,
         mobile: admin.mobile,
+        username: admin.username,
       };
       const token = this.jwt.signer(tokenValues, 86400 * 30);
       await this.commandBus.execute(

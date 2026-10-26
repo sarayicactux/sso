@@ -4,6 +4,8 @@ package user;
 
 service UserGrpcService {
   rpc ValidateUserAppAccess (ValidateUserAppAccessRequest) returns (ValidateUserAppAccessResponse);
+  rpc UpdateUserStatusByUsername (UpdateUserStatusByUsernameRequest) returns (UpdateUserStatusByUsernameResponse);
+  rpc CreateUser (CreateUserRequest) returns (CreateUserResponse);
 }
 
 message ValidateUserAppAccessRequest {
@@ -13,4 +15,36 @@ message ValidateUserAppAccessRequest {
 
 message ValidateUserAppAccessResponse {
   bool valid = 1;
+}
+
+message UpdateUserStatusByUsernameRequest {
+  string username = 1;
+  bool status = 2;
+  string accessToken = 3;
+}
+
+message UpdateUserStatusByUsernameResponse {
+  bool success = 1;
+  bool status = 2;
+}
+
+message CreateUserRequest {
+  string username = 1;
+  string email = 2;
+  string mobile = 3;
+  string firstName = 4;
+  string lastName = 5;
+  string password = 6;
+  string accessToken = 7;
+}
+
+message CreateUserResponse {
+  bool success = 1;
+  int32 id = 2;
+  string username = 3;
+  string email = 4;
+  string mobile = 5;
+  string firstName = 6;
+  string lastName = 7;
+  bool status = 8;
 }

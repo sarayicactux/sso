@@ -1,5 +1,4 @@
 export interface LoginInterface {
-  username?: string;
-  mobile?: string;
+  username: string;
   password: string;
 }

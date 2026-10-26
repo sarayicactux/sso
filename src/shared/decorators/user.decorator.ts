@@ -65,6 +65,15 @@ export const User = createParamDecorator(
         HttpStatus.FORBIDDEN,
       );
     }
+    if (user.status === false) {
+      throw new HttpException(
+        {
+          status: HttpStatus.FORBIDDEN,
+          error: 'User account is inactive',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
 
     return userMapper.toUserDto(user, userToken.access_token);
   },

@@ -40,9 +40,9 @@ export class AdminController implements AdminControllerImpl {
 
   // login ************************************
   @ApiOperation({
-    summary: ' ورود مدیر  ',
+    summary: 'Admin login',
     operationId: 'adminLogin',
-    description: 'this operation is public',
+    description: 'Authenticate with username and password',
     tags: ['admin'],
   })
   @ApiOkResponse({
@@ -55,7 +55,7 @@ export class AdminController implements AdminControllerImpl {
   })
   @ApiBody({
     type: LoginDto,
-    description: 'login admin DTO',
+    description: 'Login with username and password',
   })
   @Post('login')
   @HttpCode(HttpStatus.OK)

@@ -15,7 +15,7 @@ Build a live `UserModule` for end-user SSO accounts linked to Apps via `UserApp`
 | Revoke | Hard-delete `UserApp`; body `{ accessToken, userId }` |
 | Create body | User fields + `accessToken` |
 | App gate | `FindAppByAccessTokenQuery`; app active |
-| Login | mobile + password; JWT + user_tokens; apps in DTO |
+| Login | username + password; JWT + user_tokens; apps in DTO |
 | Protected routes | `@User()` → userToken / userId |
 | Password recover | Reuse Admin SmsRq flow with `userId` in JWT |
 | `UserApp` | `@@unique([userId, appId])` |

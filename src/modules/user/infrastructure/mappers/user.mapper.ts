@@ -17,6 +17,7 @@ export class UserMapper {
       lastName: user.lastName,
       email: user.email,
       mobile: user.mobile,
+      status: user.status !== false,
       access_token: access_token,
       apps: apps
         ? apps

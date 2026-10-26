@@ -138,6 +138,7 @@ model User {
   mobile    String    @unique @db.VarChar(11)
   firstName String?
   lastName  String?
+  status    Boolean   @default(true)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?

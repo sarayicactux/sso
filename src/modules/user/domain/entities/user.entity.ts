@@ -6,6 +6,7 @@ export class User {
   email: string;
   mobile: string;
   password?: string;
+  status: boolean;
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date;
@@ -18,6 +19,7 @@ export class User {
     email: string;
     mobile: string;
     password?: string;
+    status?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
     deletedAt?: Date;
@@ -29,13 +31,33 @@ export class User {
     this.email = data.email;
     this.mobile = data.mobile;
     this.password = data.password;
+    this.status = data.status !== false;
     this.createdAt = data.createdAt || new Date();
     this.updatedAt = data.updatedAt || new Date();
     this.deletedAt = data.deletedAt || null;
   }
 
-  /** Soft-deleted users cannot receive new app grants. */
+  /** Works with Prisma plain rows and class instances. */
+  static canAuthenticate(user: {
+    status?: boolean;
+    deletedAt?: Date | null;
+  }): boolean {
+    return user.deletedAt == null && user.status !== false;
+  }
+
+  /** Works with Prisma plain rows and class instances. */
+  static canGrantAppAccess(user: {
+    status?: boolean;
+    deletedAt?: Date | null;
+  }): boolean {
+    return user.deletedAt == null && user.status !== false;
+  }
+
+  canAuthenticate(): boolean {
+    return User.canAuthenticate(this);
+  }
+
   canGrantAppAccess(): boolean {
-    return this.deletedAt == null;
+    return User.canGrantAppAccess(this);
   }
 }

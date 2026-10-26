@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsInt,
   IsNumberString,
+  IsString,
 } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
@@ -16,10 +17,10 @@ import { RecoverPasswordInterface } from '../../domain/interfaces/admin/RecoverP
 import { CreateAdminInterface } from '../../domain/interfaces/admin/CreateAdmin.interface';
 
 export class LoginDto implements LoginInterface {
-  @ApiProperty()
-  @IsNumberString()
-  @IsMobilePhone()
-  mobile?: string;
+  @ApiProperty({ description: 'Unique username used for login' })
+  @IsNotEmpty()
+  @IsString()
+  username: string;
 
   @ApiProperty()
   @IsNotEmpty()

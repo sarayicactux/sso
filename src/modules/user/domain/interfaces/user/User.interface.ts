@@ -5,6 +5,7 @@ export interface UserInterface {
   lastName: string;
   email: string;
   mobile: string;
+  status: boolean;
   access_token?: string;
   createdAt: Date;
   updatedAt: Date;

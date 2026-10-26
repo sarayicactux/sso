@@ -1,4 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
+import { status as GrpcStatus } from '@grpc/grpc-js';
 import { UserServiceImpl } from '../../domain/services/user.service';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import * as bcrypt from 'bcryptjs';
@@ -24,11 +26,13 @@ import { UpdateSmsRqCommand } from '../../../admin/application/commands/sms_rq/u
 import { SoftDeleteCommand } from '../../../admin/application/commands/sms_rq/delete/softDelete.command';
 import { GetOneSmsRqQuery } from '../../../admin/application/queries/sms_rq/getOne.query';
 import { FindAppByAccessTokenQuery } from '../../../app/application/queries/findByAccessToken.query';
+import { FindAppByIdQuery } from '../../../app/application/queries/findById.query';
 
 import { GetUserByMobileQuery } from '../queries/user/getUserByMobile.query';
 import { GetUserByEmailQuery } from '../queries/user/getUserByEmail.query';
 import { GetUserByUsernameQuery } from '../queries/user/getUserByUsername.query';
 import { GetUserQuery } from '../queries/user/getUser.query';
+import { FindAllUsersWithAppsQuery } from '../queries/user/findAllWithApps.query';
 import { FindUserAppByUserIdAndAppIdQuery } from '../queries/user_app/findByUserIdAndAppId.query';
 import { FindAppsByUserIdQuery } from '../queries/user_app/findAppsByUserId.query';
 import { FindUserTokenByAccessTokenQuery } from '../queries/user_token/findByAccessToken.query';
@@ -36,13 +40,30 @@ import { User } from '../../domain/entities/user.entity';
 import { UserToken } from '../../domain/entities/userToken.entity';
 import { App } from '../../../app/domain/entities/app.entity';
 import { UpdateUserPasswordCommand } from '../commands/user/update/updatePassword.command';
+import { UpdateUserStatusCommand } from '../commands/user/update/updateStatus.command';
 import { CreateUserCommand } from '../commands/user/create/createUser.command';
 import { CreateUserAppCommand } from '../commands/user_app/create/createUserApp.command';
 import { DeleteUserAppCommand } from '../commands/user_app/delete/deleteUserApp.command';
 import { ValidateUserAppAccessInterface } from '../../domain/interfaces/user/ValidateUserAppAccess.interface';
+import { UpdateUserStatusInterface } from '../../domain/interfaces/user/UpdateUserStatus.interface';
+import {
+  UpdateUserStatusByUsernameInterface,
+  UpdateUserStatusByUsernameResult,
+} from '../../domain/interfaces/user/UpdateUserStatusByUsername.interface';
+import {
+  CreateUserViaAppInterface,
+  CreateUserViaAppResult,
+} from '../../domain/interfaces/user/CreateUserViaApp.interface';
+import { AssociateUserAppInterface } from '../../domain/interfaces/user_app/AssociateUserApp.interface';
+import { AppMapper } from '../../../app/infrastructure/mappers/app.mapper';
+import { AppDto } from '../../../app/presentation/dtos/app.dto';
+import { UserWithApps } from '../../domain/repositories/user.repository';
+import { DatabaseAct } from '../../../../shared/enums/databaseAct.enum';
 
 @Injectable()
 export class UserService implements UserServiceImpl {
+  private readonly appMapper = new AppMapper();
+
   constructor(
     private readonly userMapper: UserMapper,
     private readonly jwt: Jwt,
@@ -50,6 +71,26 @@ export class UserService implements UserServiceImpl {
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
   ) {}
+
+  private userNotFound(): never {
+    throw new HttpException(
+      {
+        status: HttpStatus.NOT_FOUND,
+        error: 'User not found',
+      },
+      HttpStatus.NOT_FOUND,
+    );
+  }
+
+  private appNotFound(): never {
+    throw new HttpException(
+      {
+        status: HttpStatus.NOT_FOUND,
+        error: 'Application not found',
+      },
+      HttpStatus.NOT_FOUND,
+    );
+  }
 
   private async requireActiveApp(accessToken: string): Promise<App> {
     const app = (await this.queryBus.execute(
@@ -112,7 +153,7 @@ export class UserService implements UserServiceImpl {
 
     let user: User;
     if (existing) {
-      if (existing.deletedAt != null) {
+      if (!User.canGrantAppAccess(existing)) {
         throw new HttpException(
           {
             status: HttpStatus.FORBIDDEN,
@@ -149,6 +190,107 @@ export class UserService implements UserServiceImpl {
     return this.userMapper.toUserDto(user, null, apps);
   }
 
+  /**
+   * gRPC CreateUser: validate App accessToken against DB first, then reuse REST create.
+   * Response omits password, access tokens, and apps.
+   */
+  async createViaApp(
+    data: CreateUserViaAppInterface,
+  ): Promise<CreateUserViaAppResult> {
+    const username = data?.username?.trim();
+    const email = data?.email?.trim();
+    const mobile = data?.mobile?.trim();
+    const password = data?.password;
+    const accessToken = data?.accessToken?.trim();
+    const firstName = data?.firstName?.trim() || undefined;
+    const lastName = data?.lastName?.trim() || undefined;
+
+    if (!username || !email || !mobile || !password || !accessToken) {
+      throw new RpcException({
+        code: GrpcStatus.INVALID_ARGUMENT,
+        message:
+          'username, email, mobile, password, and accessToken are required',
+      });
+    }
+    if (password.length < 6) {
+      throw new RpcException({
+        code: GrpcStatus.INVALID_ARGUMENT,
+        message: 'password must be at least 6 characters',
+      });
+    }
+
+    // Critical: reject invalid/inactive app tokens before any user write.
+    const app = (await this.queryBus.execute(
+      new FindAppByAccessTokenQuery(accessToken),
+    )) as App | null;
+    if (!app || app.status !== true) {
+      throw new RpcException({
+        code: GrpcStatus.PERMISSION_DENIED,
+        message: 'Invalid or inactive application',
+      });
+    }
+
+    try {
+      const user = await this.create({
+        username,
+        email,
+        mobile,
+        firstName,
+        lastName,
+        password,
+        accessToken,
+      });
+      return {
+        success: true,
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        mobile: user.mobile,
+        firstName: user.firstName ?? '',
+        lastName: user.lastName ?? '',
+        status: user.status !== false,
+      };
+    } catch (e) {
+      if (e instanceof RpcException) {
+        throw e;
+      }
+      if (e instanceof HttpException) {
+        throw this.httpExceptionToRpc(e);
+      }
+      throw new RpcException({
+        code: GrpcStatus.INTERNAL,
+        message: 'Failed to create user',
+      });
+    }
+  }
+
+  private httpExceptionToRpc(e: HttpException): RpcException {
+    const status = e.getStatus();
+    const body = e.getResponse();
+    const message =
+      typeof body === 'string'
+        ? body
+        : ((body as { error?: string; message?: string })?.error ??
+          (body as { message?: string })?.message ??
+          e.message);
+
+    let code = GrpcStatus.INTERNAL;
+    if (status === HttpStatus.BAD_REQUEST) {
+      code = GrpcStatus.INVALID_ARGUMENT;
+    } else if (status === HttpStatus.FORBIDDEN) {
+      code = GrpcStatus.PERMISSION_DENIED;
+    } else if (status === HttpStatus.NOT_FOUND) {
+      code = GrpcStatus.NOT_FOUND;
+    } else if (status === HttpStatus.CONFLICT) {
+      code = GrpcStatus.ALREADY_EXISTS;
+    }
+
+    return new RpcException({
+      code,
+      message: Array.isArray(message) ? message.join(', ') : String(message),
+    });
+  }
+
   async revokeAppAccess(data: RevokeUserAppDto): Promise<boolean> {
     const app = await this.requireActiveApp(data.accessToken);
     const link = await this.queryBus.execute(
@@ -170,10 +312,10 @@ export class UserService implements UserServiceImpl {
   }
 
   async login(loginDto: LoginDto, ip: string): Promise<UserDto> {
-    const { mobile, password } = loginDto;
+    const { username, password } = loginDto;
     const user = (await this.queryBus.execute(
-      new GetUserByMobileQuery(mobile),
-    )) as User;
+      new GetUserByUsernameQuery(username),
+    )) as User | null;
     if (!user) {
       throw new HttpException(
         {
@@ -183,10 +325,20 @@ export class UserService implements UserServiceImpl {
         HttpStatus.FORBIDDEN,
       );
     }
+    if (!User.canAuthenticate(user)) {
+      throw new HttpException(
+        {
+          status: HttpStatus.FORBIDDEN,
+          error: 'User account is inactive',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
     if (await bcrypt.compare(password, user.password)) {
       const tokenValues = {
         userId: user.id,
         mobile: user.mobile,
+        username: user.username,
       };
       const token = this.jwt.signer(tokenValues, 86400 * 30);
       await this.commandBus.execute(
@@ -199,6 +351,7 @@ export class UserService implements UserServiceImpl {
       const apps = await this.appsForUser(user.id);
       return this.userMapper.toUserDto(user, token, apps);
     }
+
     throw new HttpException(
       {
         status: HttpStatus.FORBIDDEN,
@@ -235,12 +388,21 @@ export class UserService implements UserServiceImpl {
   async getDashboard(userId: number, access_token: string): Promise<UserDto> {
     const user = (await this.queryBus.execute(
       new GetUserQuery(userId),
-    )) as User;
+    )) as User | null;
     if (!user) {
       throw new HttpException(
         {
           status: HttpStatus.FORBIDDEN,
           error: 'User not found',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
+    if (!User.canAuthenticate(user)) {
+      throw new HttpException(
+        {
+          status: HttpStatus.FORBIDDEN,
+          error: 'User account is inactive',
         },
         HttpStatus.FORBIDDEN,
       );
@@ -414,7 +576,7 @@ export class UserService implements UserServiceImpl {
       const user = (await this.queryBus.execute(
         new GetUserQuery(userId),
       )) as User | null;
-      if (!user) {
+      if (!user || !User.canAuthenticate(user)) {
         return false;
       }
 
@@ -425,5 +587,202 @@ export class UserService implements UserServiceImpl {
     } catch {
       return false;
     }
+  }
+
+  async updateStatusByUsernameViaApp(
+    data: UpdateUserStatusByUsernameInterface,
+  ): Promise<UpdateUserStatusByUsernameResult> {
+    const username = data?.username?.trim();
+    const accessToken = data?.accessToken?.trim();
+    if (!username || accessToken == null || accessToken === '') {
+      throw new RpcException({
+        code: GrpcStatus.INVALID_ARGUMENT,
+        message: 'username and accessToken are required',
+      });
+    }
+    if (typeof data.status !== 'boolean') {
+      throw new RpcException({
+        code: GrpcStatus.INVALID_ARGUMENT,
+        message: 'status must be a boolean',
+      });
+    }
+
+    const app = (await this.queryBus.execute(
+      new FindAppByAccessTokenQuery(accessToken),
+    )) as App | null;
+    if (!app || app.status !== true) {
+      throw new RpcException({
+        code: GrpcStatus.PERMISSION_DENIED,
+        message: 'Invalid or inactive application',
+      });
+    }
+
+    const user = (await this.queryBus.execute(
+      new GetUserByUsernameQuery(username),
+    )) as User | null;
+    if (!user) {
+      throw new RpcException({
+        code: GrpcStatus.NOT_FOUND,
+        message: 'User not found',
+      });
+    }
+
+    try {
+      await this.commandBus.execute(
+        new UpdateUserStatusCommand({ id: user.id, status: data.status }),
+      );
+    } catch {
+      throw new RpcException({
+        code: GrpcStatus.INTERNAL,
+        message: 'Failed to update user status',
+      });
+    }
+
+    return { success: true, status: data.status };
+  }
+
+  async findAllForAdmin(): Promise<UserDto[]> {
+    const rows = (await this.queryBus.execute(
+      new FindAllUsersWithAppsQuery(),
+    )) as UserWithApps[];
+    return rows
+      .map((row) =>
+        this.userMapper.toUserDto(row, null, (row.apps as App[]) || []),
+      )
+      .filter((dto): dto is UserDto => dto != null);
+  }
+
+  async updateStatus(
+    data: UpdateUserStatusInterface,
+    admin: any,
+  ): Promise<UserDto> {
+    const existing = (await this.queryBus.execute(
+      new GetUserQuery(data.id),
+    )) as User | null;
+    if (!existing) {
+      this.userNotFound();
+    }
+    const updated = (await this.commandBus.execute(
+      new UpdateUserStatusCommand(data),
+    )) as User;
+    this.tools.saveLogs({
+      adminId: admin.id,
+      tableName: 'users',
+      rowId: data.id,
+      act: DatabaseAct.UPDATE,
+      oldData: { status: existing.status },
+      newData: { status: data.status },
+      description: 'Update user status',
+    });
+    const apps = await this.appsForUser(updated.id);
+    return this.userMapper.toUserDto(updated, null, apps);
+  }
+
+  async getUserApps(userId: number): Promise<AppDto[]> {
+    const user = (await this.queryBus.execute(
+      new GetUserQuery(userId),
+    )) as User | null;
+    if (!user) {
+      this.userNotFound();
+    }
+    const apps = await this.appsForUser(userId);
+    return apps
+      .map((app) => this.appMapper.toAppDto(app, ''))
+      .filter((dto): dto is AppDto => dto != null);
+  }
+
+  async associateApp(
+    data: AssociateUserAppInterface,
+    admin: any,
+  ): Promise<UserDto> {
+    const user = (await this.queryBus.execute(
+      new GetUserQuery(data.userId),
+    )) as User | null;
+    if (!user) {
+      this.userNotFound();
+    }
+    if (!User.canGrantAppAccess(user)) {
+      throw new HttpException(
+        {
+          status: HttpStatus.FORBIDDEN,
+          error: 'User is inactive',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
+    const app = (await this.queryBus.execute(
+      new FindAppByIdQuery(data.appId),
+    )) as App | null;
+    if (!app || app.deletedAt != null) {
+      this.appNotFound();
+    }
+    const link = await this.queryBus.execute(
+      new FindUserAppByUserIdAndAppIdQuery(data.userId, data.appId),
+    );
+    if (link) {
+      throw new HttpException(
+        {
+          status: HttpStatus.CONFLICT,
+          error: 'User is already associated with this application',
+        },
+        HttpStatus.CONFLICT,
+      );
+    }
+    await this.commandBus.execute(
+      new CreateUserAppCommand({ userId: data.userId, appId: data.appId }),
+    );
+    this.tools.saveLogs({
+      adminId: admin.id,
+      tableName: 'user_apps',
+      rowId: data.userId,
+      act: DatabaseAct.CREATE,
+      oldData: null,
+      newData: { userId: data.userId, appId: data.appId },
+      description: 'Associate user with application',
+    });
+    const apps = await this.appsForUser(data.userId);
+    return this.userMapper.toUserDto(user, null, apps);
+  }
+
+  async removeUserApp(
+    userId: number,
+    appId: number,
+    admin: any,
+  ): Promise<boolean> {
+    const user = (await this.queryBus.execute(
+      new GetUserQuery(userId),
+    )) as User | null;
+    if (!user) {
+      this.userNotFound();
+    }
+    const app = (await this.queryBus.execute(
+      new FindAppByIdQuery(appId),
+    )) as App | null;
+    if (!app) {
+      this.appNotFound();
+    }
+    const link = await this.queryBus.execute(
+      new FindUserAppByUserIdAndAppIdQuery(userId, appId),
+    );
+    if (!link) {
+      throw new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          error: 'User access to this application was not found',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    await this.commandBus.execute(new DeleteUserAppCommand(userId, appId));
+    this.tools.saveLogs({
+      adminId: admin.id,
+      tableName: 'user_apps',
+      rowId: userId,
+      act: DatabaseAct.DELETE,
+      oldData: { userId, appId },
+      newData: null,
+      description: 'Remove user application association',
+    });
+    return true;
   }
 }
