@@ -31,7 +31,6 @@ model AdminToken {
   device             String?
   ip                 String?
   access_token       String    @db.VarChar(240)
-  fireBaseToken      String?
   lastConfirmationId Int?      @db.SmallInt
   adminId            Int
   createdAt          DateTime  @default(now())
@@ -100,8 +99,9 @@ model App {
   deletedAt     DateTime?
 
   // Relations
-  Media Media? @relation(fields: [mediaId], references: [id])
-  Admin Admin  @relation(fields: [adminId], references: [id])
+  Media    Media?    @relation(fields: [mediaId], references: [id])
+  Admin    Admin     @relation(fields: [adminId], references: [id])
+  UserApps UserApp[]
 
   @@map("apps")
 }
@@ -124,7 +124,60 @@ model Media {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   deletedAt  DateTime?
-  apps       App[]
+
+  apps App[]
 
   @@map("medias")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  password  String
+  email     String    @unique
+  mobile    String    @unique @db.VarChar(11)
+  firstName String?
+  lastName  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  UserTokens UserToken[]
+  UserApps   UserApp[]
+
+  @@map("users")
+}
+
+model UserApp {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  appId     Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  User User @relation(fields: [userId], references: [id])
+  App  App  @relation(fields: [appId], references: [id])
+
+  @@unique([userId, appId])
+  @@map("users_apps")
+}
+
+model UserToken {
+  id                 Int       @id @default(autoincrement())
+  device             String?
+  ip                 String?
+  access_token       String    @db.VarChar(240)
+  lastConfirmationId Int?      @db.SmallInt
+  userId             Int
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
+
+  // Relations
+  User User @relation(fields: [userId], references: [id])
+
+  @@map("user_tokens")
 }

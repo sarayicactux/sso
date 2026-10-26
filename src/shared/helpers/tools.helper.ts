@@ -247,7 +247,7 @@ export class Tools {
     return Math.round(d);
   }
   async sendSmsCode(phone, code) {
-    return;
+    return code;
     const receptor = phone;
     const template = 'otp';
     const type = 1;

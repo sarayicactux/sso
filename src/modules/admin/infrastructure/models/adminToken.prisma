@@ -3,7 +3,6 @@ model AdminToken {
   device              String?
   ip                  String?
   access_token        String @db.VarChar(240)
-  fireBaseToken       String?
   lastConfirmationId  Int? @db.SmallInt
   adminId             Int
   createdAt DateTime  @default(now())

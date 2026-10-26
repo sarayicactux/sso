@@ -38,7 +38,7 @@ export class AdminService implements AdminServiceImpl {
   ) {}
 
   async login(loginDto: LoginDto, ip: string): Promise<AdminDto> {
-    const { fireBaseToken, mobile, password } = loginDto;
+    const { mobile, password } = loginDto;
     const admin = (await this.queryBus.execute(
       new GetAdminByMobileQuery(mobile),
     )) as Admin;
@@ -62,7 +62,6 @@ export class AdminService implements AdminServiceImpl {
           adminId: admin.id,
           ip,
           access_token: token,
-          fireBaseToken,
         }),
       );
       return this.adminMapper.toAdminDto(admin, token);

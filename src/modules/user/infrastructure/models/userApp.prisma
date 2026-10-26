@@ -1,0 +1,15 @@
+model UserApp {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  appId     Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  User User @relation(fields: [userId], references: [id])
+  App  App  @relation(fields: [appId], references: [id])
+
+  @@unique([userId, appId])
+  @@map("users_apps")
+}

@@ -1,0 +1,19 @@
+
+model User {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  password  String
+  email     String    @unique
+  mobile    String    @unique @db.VarChar(11)
+  firstName String?
+  lastName  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  UserTokens UserToken[]
+  UserApps   UserApp[]
+
+  @@map("users")
+}

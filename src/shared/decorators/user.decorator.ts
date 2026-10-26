@@ -6,17 +6,14 @@ import {
 } from '@nestjs/common';
 import { Jwt } from '../helpers/jwt.helper';
 import { PrismaService } from '../../prisma/prisma.service';
-import { AdminMapper } from '../../modules/admin/infrastructure/mappers/admin.mapper';
+import { UserMapper } from '../../modules/user/infrastructure/mappers/user.mapper';
 
 const jwt = new Jwt();
 const prismaService = new PrismaService();
-const adminMapper = new AdminMapper();
+const userMapper = new UserMapper();
 
 export const User = createParamDecorator(
-  async (
-    data: { operationId: string; roleCheck: boolean },
-    ctx: ExecutionContext,
-  ) => {
+  async (data: { operationId: string }, ctx: ExecutionContext) => {
     if (!data) console.log('no data');
     const req = ctx.switchToHttp().getRequest();
     const header = req.headers['authorization'];
@@ -24,20 +21,20 @@ export const User = createParamDecorator(
       throw new HttpException(
         {
           status: HttpStatus.FORBIDDEN,
-          error: ' برای دسترسی باید وارد شوید ',
+          error: 'You must log in to access this resource',
         },
         HttpStatus.FORBIDDEN,
       );
     }
     const access_token = header.replace('Bearer ', '');
-    const adminToken = await prismaService.findOne('adminToken', {
+    const userToken = await prismaService.findOne('userToken', {
       where: { access_token: access_token },
     });
-    if (!adminToken) {
+    if (!userToken) {
       throw new HttpException(
         {
           status: HttpStatus.FORBIDDEN,
-          error: ' توکن نامعتبر ',
+          error: 'Invalid token',
         },
         HttpStatus.FORBIDDEN,
       );
@@ -47,28 +44,28 @@ export const User = createParamDecorator(
       throw new HttpException(
         {
           status: HttpStatus.FORBIDDEN,
-          error: ' توکن نامعتبر ',
+          error: 'Invalid token',
         },
         HttpStatus.FORBIDDEN,
       );
     }
-    const { adminId } = tokenValues as { adminId: number };
-    const admin = await prismaService.findByUnique('admin', {
-      where: { id: adminId, deletedAt: null },
+    const { userId } = tokenValues as { userId: number };
+    const user = await prismaService.findOne('user', {
+      where: { id: userId },
       include: {
-        AdminTokens: true,
+        UserTokens: true,
       },
     });
-    if (!admin) {
+    if (!user) {
       throw new HttpException(
         {
           status: HttpStatus.FORBIDDEN,
-          error: ' کاربر یافت نشد ',
+          error: 'User not found',
         },
         HttpStatus.FORBIDDEN,
       );
     }
 
-    return adminMapper.toAdminDto(admin, adminToken.access_token);
+    return userMapper.toUserDto(user, userToken.access_token);
   },
 );

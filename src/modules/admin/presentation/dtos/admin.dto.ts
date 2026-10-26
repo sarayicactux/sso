@@ -25,9 +25,6 @@ export class LoginDto implements LoginInterface {
   @IsNotEmpty()
   @MinLength(6)
   password: string;
-
-  @ApiProperty({ required: false })
-  fireBaseToken?: string;
 }
 
 export class UpdatePasswordDto implements UpdatePasswordInterface {

@@ -4,6 +4,5 @@ export interface CreateAdminTokenInterface {
   ip: string;
   access_token: string;
   secretKey?: string;
-  fireBaseToken?: string;
   lastConfirmationId?: number;
 }

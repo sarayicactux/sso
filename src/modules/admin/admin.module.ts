@@ -79,6 +79,6 @@ const mappers = [AdminMapper];
     Tools,
     ...mappers,
   ],
-  exports: [AdminRepository, AdminService],
+  exports: [AdminRepository, AdminService, SmsRqRepository],
 })
 export class AdminModule {}

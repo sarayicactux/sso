@@ -8,8 +8,15 @@ import { EventsModule } from './shared/event/events.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { MediaModule } from './modules/media/media.module';
 import { AppsModule } from './modules/app/app.module';
+import { UserModule } from './modules/user/user.module';
 
-const modules = [AdminModule, MediaModule, AppsModule, EventsModule];
+const modules = [
+  AdminModule,
+  MediaModule,
+  AppsModule,
+  UserModule,
+  EventsModule,
+];
 //commands
 import { SeedAdminCommand } from './shared/commands/seedAdmin.command';
 

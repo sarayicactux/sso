@@ -6,7 +6,6 @@ export class AdminToken {
   ip: string;
   access_token: string;
   secretKey?: string;
-  fireBaseToken?: string;
   lastConfirmationId?: number;
   Admin?: Admin;
   createdAt?: Date;
@@ -20,7 +19,6 @@ export class AdminToken {
     ip: string;
     access_token: string;
     secretKey?: string;
-    fireBaseToken?: string;
     lastConfirmationId?: number;
     Admin?: Admin;
     createdAt?: Date;
@@ -33,7 +31,6 @@ export class AdminToken {
     this.ip = data.ip;
     this.access_token = data.access_token;
     this.secretKey = data.secretKey;
-    this.fireBaseToken = data.fireBaseToken;
     this.lastConfirmationId = data.lastConfirmationId;
     this.Admin = data.Admin;
     this.createdAt = data.createdAt || new Date();

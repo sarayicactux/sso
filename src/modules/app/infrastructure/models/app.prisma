@@ -1,21 +1,22 @@
 
 model App {
-  id           Int       @id @default(autoincrement())
-  title        String    @unique
-  description  String
-  url          String    @unique
-  mediaId      Int?
-  adminId      Int
-  status       Boolean? @default(true) 
-  activeSession Boolean? @default(true) 
-  accessToken  String?  @unique
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-  
-  // Relations
-Media   Media?     @relation(fields: [mediaId], references: [id])
-Admin   Admin      @relation(fields: [adminId], references: [id])
+  id            Int       @id @default(autoincrement())
+  title         String    @unique
+  description   String
+  url           String    @unique
+  mediaId       Int?
+  adminId       Int
+  status        Boolean?  @default(true)
+  activeSession Boolean?  @default(true)
+  accessToken   String?   @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
 
-@@map("apps")
+  // Relations
+  Media    Media?    @relation(fields: [mediaId], references: [id])
+  Admin    Admin     @relation(fields: [adminId], references: [id])
+  UserApps UserApp[]
+
+  @@map("apps")
 }
