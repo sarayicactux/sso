@@ -22,12 +22,14 @@ client.interceptors.response.use(
     const url = String(error.config?.url || '')
     // Backend uses 403 for both auth failures and business rules (e.g. bad password).
     // Public user create/revoke and password flows use 403 for domain failures.
+    const path = url.split('?')[0] || ''
     const businessForbidden =
       url.includes('/login') ||
       url.includes('/forgetPass') ||
       url.includes('/recoverPass') ||
       url.includes('/updatePassword') ||
-      /\/users(\/apps)?$/.test(url.split('?')[0] || '')
+      /\/users(\/apps)?$/.test(path) ||
+      /\/users\/apps\/\d+\/publicKey$/.test(path)
 
     if (status === 401 || (status === 403 && !businessForbidden)) {
       const authStore = useAuthStore()

@@ -6,6 +6,7 @@ service UserGrpcService {
   rpc ValidateUserAppAccess (ValidateUserAppAccessRequest) returns (ValidateUserAppAccessResponse);
   rpc UpdateUserStatusByUsername (UpdateUserStatusByUsernameRequest) returns (UpdateUserStatusByUsernameResponse);
   rpc CreateUser (CreateUserRequest) returns (CreateUserResponse);
+  rpc GetUserByPublicKey (GetUserByPublicKeyRequest) returns (GetUserByPublicKeyResponse);
 }
 
 message ValidateUserAppAccessRequest {
@@ -54,4 +55,21 @@ message CreateUserResponse {
   string firstName = 6;
   string lastName = 7;
   bool status = 8;
+}
+
+message GetUserByPublicKeyRequest {
+  string accessToken = 1;
+  string publicKey = 2;
+}
+
+message GetUserByPublicKeyResponse {
+  bool success = 1;
+  int32 id = 2;
+  string username = 3;
+  string email = 4;
+  string mobile = 5;
+  string firstName = 6;
+  string lastName = 7;
+  bool status = 8;
+  string access_token = 9;
 }

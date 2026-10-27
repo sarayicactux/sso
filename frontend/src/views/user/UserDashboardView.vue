@@ -4,19 +4,17 @@
       <h2>{{ t('dashboard.apps') }}</h2>
       <n-button @click="refresh" :loading="loading">{{ t('common.refresh') }}</n-button>
     </div>
-    <n-spin :show="loading">
+    <n-spin :show="loading || openingAppId != null">
       <n-empty v-if="!apps.length" :description="t('dashboard.noApps')" />
       <div v-else class="apps-grid" :dir="locale === 'fa' ? 'rtl' : 'ltr'">
-        <a
+        <button
           v-for="app in apps"
           :key="app.id"
+          type="button"
           class="app-card"
-          :href="app.url || undefined"
-          :target="app.url ? '_blank' : undefined"
-          :rel="app.url ? 'noopener noreferrer' : undefined"
-          :aria-disabled="!app.url"
-          :class="{ disabled: !app.url }"
-          @click="onAppClick($event, app)"
+          :disabled="openingAppId != null"
+          :class="{ disabled: openingAppId != null && openingAppId !== app.id }"
+          @click="onAppClick(app)"
         >
           <div class="app-card-image-wrap">
             <img
@@ -36,7 +34,7 @@
             <div v-if="app.url" class="app-card-link">{{ app.url }}</div>
             <div v-else class="app-card-link muted">{{ t('dashboard.noAppUrl') }}</div>
           </div>
-        </a>
+        </button>
       </div>
     </n-spin>
   </div>
@@ -46,6 +44,7 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useMessage } from 'naive-ui'
+import { usersApi } from '../../api/users'
 import { useAuthStore } from '../../stores/auth'
 import { getApiError } from '../../utils/error'
 import { resolveMediaUrl } from '../../utils/mediaUrl'
@@ -56,6 +55,7 @@ const { t, locale } = useI18n()
 const authStore = useAuthStore()
 const message = useMessage()
 const loading = ref(false)
+const openingAppId = ref<number | null>(null)
 const profile = computed(() => authStore.profile as UserDto | null)
 const apps = computed(() => profile.value?.apps || [])
 
@@ -63,10 +63,20 @@ function imageSrc(app: AppDto): string | null {
   return resolveMediaUrl(app.Media?.mediaUrl)
 }
 
-function onAppClick(event: MouseEvent, app: AppDto) {
-  if (!app.url) {
-    event.preventDefault()
-    message.warning(t('dashboard.noAppUrl'))
+async function onAppClick(app: AppDto) {
+  if (openingAppId.value != null) return
+  openingAppId.value = app.id
+  try {
+    const { data } = await usersApi.generateAppPublicKey(app.id)
+    if (!data?.url) {
+      message.error(t('dashboard.openAppFailed'))
+      return
+    }
+    window.location.assign(data.url)
+  } catch (e) {
+    message.error(getApiError(e) || t('dashboard.openAppFailed'))
+  } finally {
+    openingAppId.value = null
   }
 }
 
@@ -104,13 +114,20 @@ async function refresh() {
   color: #1f2225;
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
   min-height: 100%;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  appearance: none;
 }
 
-.app-card:hover:not(.disabled) {
+.app-card:hover:not(:disabled):not(.disabled) {
   border-color: #35c0a3;
   box-shadow: 0 6px 18px rgba(53, 192, 163, 0.16);
 }
 
+.app-card:disabled,
 .app-card.disabled {
   cursor: not-allowed;
   opacity: 0.85;

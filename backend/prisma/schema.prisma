@@ -171,7 +171,8 @@ model UserToken {
   device             String?
   ip                 String?
   access_token       String    @db.VarChar(240)
-  publicKey          String?   @unique
+  // Cleared to "" after one-time GetUserByPublicKey use; uniqueness of live keys is app-enforced
+  publicKey          String?
   lastConfirmationId Int?      @db.SmallInt
   userId             Int
   createdAt          DateTime  @default(now())

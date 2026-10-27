@@ -25,6 +25,9 @@ export class UserTokenRepository implements UserTokenRepositoryImpl {
   }
 
   async findByPublicKey(publicKey: string): Promise<UserToken | null> {
+    if (!publicKey) {
+      return null;
+    }
     const token = await this.prisma.findOne('userToken', {
       where: { publicKey },
     });
@@ -34,6 +37,16 @@ export class UserTokenRepository implements UserTokenRepositoryImpl {
   async updatePublicKey(
     data: UpdateUserTokenPublicKeyInterface,
   ): Promise<boolean> {
+    if (data.id != null) {
+      await this.prisma.userToken.update({
+        where: { id: data.id },
+        data: { publicKey: data.publicKey },
+      });
+      return true;
+    }
+    if (data.userId == null) {
+      return false;
+    }
     const tokens = await this.prisma.findAll('userToken', {
       where: { userId: data.userId },
       take: 1,

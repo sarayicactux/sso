@@ -114,7 +114,7 @@ Live under `modules/app` (`AppsModule`). Entity fields: `title`, `description`, 
 
 **Entities:** `User`, `UserApp` (join), `UserToken` (session JWT row).
 
-**`UserServiceImpl`:** `create` (app `accessToken` gate; match existing by mobile/email/username; grant `UserApp`), `createViaApp` (gRPC; validate App token then reuse `create`; safe response), `revokeAppAccess` (hard-delete join), `login` (apps in DTO), `updatePassword`, `forgetPassword`, `recoverPassword`, `logOut`, `validateUserAppAccess` (gRPC; `valid` + safe user fields, no throw), `updateStatusByUsernameViaApp` (gRPC).
+**`UserServiceImpl`:** `create` (app `accessToken` gate; match existing by mobile/email/username; grant `UserApp`), `createViaApp` (gRPC; validate App token then reuse `create`; safe response), `revokeAppAccess` (hard-delete join), `login` (apps in DTO), `updatePassword`, `forgetPassword`, `recoverPassword`, `logOut`, `validateUserAppAccess` (gRPC; `valid` + safe user fields, no throw), `updateStatusByUsernameViaApp` (gRPC), `generateAppPublicKey` (REST; store `UserToken.publicKey`), `getUserByPublicKey` (gRPC; App `accessToken` + `publicKey` → user identity + session `access_token`).
 
 **Create rules:** App must exist and `status === true`. Conflicting identity fields across different users → 409. Existing `UserApp` → idempotent. Password hashed bcrypt cost 10.
 

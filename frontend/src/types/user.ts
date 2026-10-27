@@ -51,3 +51,8 @@ export interface UpdateUserStatusPayload {
 export interface AssociateUserAppPayload {
   appId: number
 }
+
+export interface AppPublicKeyDto {
+  publicKey: string
+  url: string
+}

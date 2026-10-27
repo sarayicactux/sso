@@ -59,6 +59,10 @@ import {
   CreateUserViaAppInterface,
   CreateUserViaAppResult,
 } from '../../domain/interfaces/user/CreateUserViaApp.interface';
+import {
+  GetUserByPublicKeyInterface,
+  GetUserByPublicKeyResult,
+} from '../../domain/interfaces/user/GetUserByPublicKey.interface';
 import { AssociateUserAppInterface } from '../../domain/interfaces/user_app/AssociateUserApp.interface';
 import { AppMapper } from '../../../app/infrastructure/mappers/app.mapper';
 import { AppDto } from '../../../app/presentation/dtos/app.dto';
@@ -149,7 +153,18 @@ export class UserService implements UserServiceImpl {
   private async appsForUser(userId: number): Promise<App[]> {
     return this.queryBus.execute(new FindAppsByUserIdQuery(userId));
   }
-
+  private invalidUserAppAccess(): ValidateUserAppAccessResult {
+    return {
+      valid: false,
+      id: 0,
+      username: '',
+      email: '',
+      mobile: '',
+      firstName: '',
+      lastName: '',
+      status: false,
+    };
+  }
   async create(data: CreateUserDto): Promise<UserDto> {
     const app = await this.requireActiveApp(data.accessToken);
     const existing = await this.resolveExistingUser({
@@ -547,19 +562,6 @@ export class UserService implements UserServiceImpl {
     return true;
   }
 
-  private invalidUserAppAccess(): ValidateUserAppAccessResult {
-    return {
-      valid: false,
-      id: 0,
-      username: '',
-      email: '',
-      mobile: '',
-      firstName: '',
-      lastName: '',
-      status: false,
-    };
-  }
-
   async validateUserAppAccess(
     data: ValidateUserAppAccessInterface,
   ): Promise<ValidateUserAppAccessResult> {
@@ -915,5 +917,111 @@ export class UserService implements UserServiceImpl {
       publicKey,
       url: `${app.url}?pk=${publicKey}`,
     });
+  }
+
+  /**
+   * gRPC GetUserByPublicKey: validate App accessToken, resolve UserToken by publicKey,
+   * authorize UserApp, return user identity plus that token's access_token.
+   */
+  async getUserByPublicKey(
+    data: GetUserByPublicKeyInterface,
+  ): Promise<GetUserByPublicKeyResult> {
+    const accessToken = data?.accessToken?.trim();
+    const publicKey = data?.publicKey?.trim();
+    if (!accessToken || !publicKey) {
+      throw new RpcException({
+        code: GrpcStatus.INVALID_ARGUMENT,
+        message: 'accessToken and publicKey are required',
+      });
+    }
+
+    const app = (await this.queryBus.execute(
+      new FindAppByAccessTokenQuery(accessToken),
+    )) as App | null;
+    if (!app || app.status !== true) {
+      throw new RpcException({
+        code: GrpcStatus.PERMISSION_DENIED,
+        message: 'Invalid or inactive application',
+      });
+    }
+
+    const userToken = (await this.queryBus.execute(
+      new FindUserTokenByPublicKeyQuery(publicKey),
+    )) as UserToken | null;
+    if (!userToken?.access_token) {
+      throw new RpcException({
+        code: GrpcStatus.NOT_FOUND,
+        message: 'Public key not found',
+      });
+    }
+
+    const tokenValues = this.jwt.verifier(userToken.access_token);
+    if (!tokenValues) {
+      throw new RpcException({
+        code: GrpcStatus.PERMISSION_DENIED,
+        message: 'Invalid user token',
+      });
+    }
+
+    const { userId } = tokenValues as { userId: number };
+    if (!userId || userToken.userId !== userId) {
+      throw new RpcException({
+        code: GrpcStatus.PERMISSION_DENIED,
+        message: 'Invalid user token',
+      });
+    }
+
+    const user = (await this.queryBus.execute(
+      new GetUserQuery(userId),
+    )) as User | null;
+    if (!user) {
+      throw new RpcException({
+        code: GrpcStatus.NOT_FOUND,
+        message: 'User not found',
+      });
+    }
+    if (!User.canAuthenticate(user)) {
+      throw new RpcException({
+        code: GrpcStatus.PERMISSION_DENIED,
+        message: 'User account is inactive',
+      });
+    }
+
+    const link = await this.queryBus.execute(
+      new FindUserAppByUserIdAndAppIdQuery(user.id, app.id),
+    );
+    if (!link) {
+      throw new RpcException({
+        code: GrpcStatus.PERMISSION_DENIED,
+        message: 'User does not have access to this application',
+      });
+    }
+
+    // publicKey is single-use: clear after successful validation
+    try {
+      await this.commandBus.execute(
+        new UpdateUserTokenPublicKeyCommand({
+          id: userToken.id,
+          publicKey: '',
+        }),
+      );
+    } catch {
+      throw new RpcException({
+        code: GrpcStatus.INTERNAL,
+        message: 'Failed to consume public key',
+      });
+    }
+
+    return {
+      success: true,
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      mobile: user.mobile,
+      firstName: user.firstName ?? '',
+      lastName: user.lastName ?? '',
+      status: user.status !== false,
+      access_token: userToken.access_token,
+    };
   }
 }

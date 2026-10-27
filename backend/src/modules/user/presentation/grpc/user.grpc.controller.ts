@@ -10,6 +10,10 @@ import {
   CreateUserViaAppInterface,
   CreateUserViaAppResult,
 } from '../../domain/interfaces/user/CreateUserViaApp.interface';
+import {
+  GetUserByPublicKeyInterface,
+  GetUserByPublicKeyResult,
+} from '../../domain/interfaces/user/GetUserByPublicKey.interface';
 
 @Controller()
 export class UserGrpcController {
@@ -48,6 +52,16 @@ export class UserGrpcController {
       lastName: data?.lastName,
       password: data?.password,
       accessToken: data?.accessToken,
+    });
+  }
+
+  @GrpcMethod('UserGrpcService', 'GetUserByPublicKey')
+  async getUserByPublicKey(
+    data: GetUserByPublicKeyInterface,
+  ): Promise<GetUserByPublicKeyResult> {
+    return this.userService.getUserByPublicKey({
+      accessToken: data?.accessToken,
+      publicKey: data?.publicKey,
     });
   }
 }

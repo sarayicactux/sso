@@ -16,6 +16,10 @@ import {
   CreateUserViaAppInterface,
   CreateUserViaAppResult,
 } from '../interfaces/user/CreateUserViaApp.interface';
+import {
+  GetUserByPublicKeyInterface,
+  GetUserByPublicKeyResult,
+} from '../interfaces/user/GetUserByPublicKey.interface';
 import { AssociateUserAppInterface } from '../interfaces/user_app/AssociateUserApp.interface';
 import { GenerateAppPublicKeyResult } from '../interfaces/user/GenerateAppPublicKey.interface';
 import { UserDto } from '../../presentation/dtos/user.dto';
@@ -54,4 +58,7 @@ export interface UserServiceImpl {
     userId: number,
     appId: number,
   ): Promise<GenerateAppPublicKeyResult>;
+  getUserByPublicKey(
+    data: GetUserByPublicKeyInterface,
+  ): Promise<GetUserByPublicKeyResult>;
 }

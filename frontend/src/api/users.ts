@@ -1,6 +1,7 @@
 import client from './client'
 import type { AppDto } from '../types/app'
 import type {
+  AppPublicKeyDto,
   AssociateUserAppPayload,
   CreateUserPayload,
   RecoverPasswordPayload,
@@ -52,5 +53,8 @@ export const usersApi = {
   },
   revokeApp(payload: RevokeUserAppPayload) {
     return client.delete<boolean>('/users/apps', { data: payload })
+  },
+  generateAppPublicKey(appId: number) {
+    return client.post<AppPublicKeyDto>(`/users/apps/${appId}/publicKey`)
   },
 }

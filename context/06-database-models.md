@@ -137,7 +137,7 @@ Source: `userToken.prisma`. Same shape as `admin_tokens` with `userId` FK. Logou
 | `id` | `Int` | PK autoincrement | |
 | `device` / `ip` | `String?` | | |
 | `access_token` | `String` | `@db.VarChar(240)` | JWT; not unique in schema |
-| `publicKey` | `String?` | `@unique` | Nullable for existing rows; set by `POST /users/apps/:appId/publicKey` via `generateAppAccessToken()` |
+| `publicKey` | `String?` | Partial unique (non-empty only) | Set by `POST /users/apps/:appId/publicKey`; cleared to `""` after one-time `GetUserByPublicKey` |
 | `lastConfirmationId` | `Int?` | `@db.SmallInt` | |
 | `userId` | `Int` | FK → `User.id` | |
 | timestamps | | | `deletedAt` present |

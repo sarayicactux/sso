@@ -37,7 +37,10 @@ export class AssociateUserAppDto {
 export class AppPublicKeyDto {
   @IsNotEmpty()
   @IsString()
-  @ApiProperty({ type: String, description: 'Generated public key stored on the user token' })
+  @ApiProperty({
+    type: String,
+    description: 'Generated public key stored on the user token',
+  })
   publicKey: string;
 
   @IsNotEmpty()

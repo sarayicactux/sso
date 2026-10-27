@@ -80,6 +80,7 @@ export default {
     apps: 'برنامه‌های متصل',
     noApps: 'برنامه متصلی وجود ندارد',
     noAppUrl: 'آدرس برنامه‌ای تنظیم نشده است',
+    openAppFailed: 'باز کردن برنامه ممکن نشد',
     roleAdmin: 'مدیر سیستم',
     roleUser: 'کاربر',
   },

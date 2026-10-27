@@ -80,6 +80,7 @@ export default {
     apps: 'Linked applications',
     noApps: 'No linked applications',
     noAppUrl: 'No application URL configured',
+    openAppFailed: 'Could not open the application',
     roleAdmin: 'Administrator',
     roleUser: 'User',
   },
