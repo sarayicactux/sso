@@ -128,6 +128,10 @@ Source: `backend/src/modules/user/infrastructure/models/user.prisma`
 
 Source: `userApp.prisma`. Join User ↔ App. `@@unique([userId, appId])`. Revoke hard-deletes the row.
 
+## AppUser → `app_user`
+
+Source: `appUser.prisma`. Join App ↔ User. `@@unique([userId, appId])`. When `GetUserByPublicKey` runs with `App.activeSession === false`, any existing row is hard-deleted then a new row is created (transaction). Required by `ValidateUserAppAccess` when `activeSession === false`. Soft-delete is not used for this workflow. Distinct from `UserApp` (`users_apps`).
+
 ## UserToken → `user_tokens`
 
 Source: `userToken.prisma`. Same shape as `admin_tokens` with `userId` FK. Logout hard-deletes by `access_token`.

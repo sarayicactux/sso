@@ -102,6 +102,7 @@ model App {
   Media    Media?    @relation(fields: [mediaId], references: [id])
   Admin    Admin     @relation(fields: [adminId], references: [id])
   UserApps UserApp[]
+  appUser  AppUser[]
 
   @@map("apps")
 }
@@ -130,6 +131,22 @@ model Media {
   @@map("medias")
 }
 
+model AppUser {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  appId     Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  User User @relation(fields: [userId], references: [id])
+  App  App  @relation(fields: [appId], references: [id])
+
+  @@unique([userId, appId])
+  @@map("app_user")
+}
+
 model User {
   id        Int       @id @default(autoincrement())
   username  String    @unique
@@ -146,6 +163,7 @@ model User {
   // Relations
   UserTokens UserToken[]
   UserApps   UserApp[]
+  appUsers   AppUser[]
 
   @@map("users")
 }

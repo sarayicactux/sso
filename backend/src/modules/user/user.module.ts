@@ -4,7 +4,13 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { UserRepository } from './infrastructure/repositories/user.repository';
 import { UserTokenRepository } from './infrastructure/repositories/userToken.repository';
 import { UserAppRepository } from './infrastructure/repositories/userApp.repository';
-const repositories = [UserRepository, UserTokenRepository, UserAppRepository];
+import { AppUserRepository } from './infrastructure/repositories/appUser.repository';
+const repositories = [
+  UserRepository,
+  UserTokenRepository,
+  UserAppRepository,
+  AppUserRepository,
+];
 
 import { Jwt } from '../../shared/helpers/jwt.helper';
 import { Tools } from '../../shared/helpers/tools.helper';
@@ -26,6 +32,8 @@ import { DeleteUserTokenHandler } from './application/commands/user_token/delete
 import { UpdateUserTokenPublicKeyHandler } from './application/commands/user_token/updatePublicKey/updatePublicKey.handler';
 import { CreateUserAppHandler } from './application/commands/user_app/create/createUserApp.handler';
 import { DeleteUserAppHandler } from './application/commands/user_app/delete/deleteUserApp.handler';
+import { CreateAppUserHandler } from './application/commands/app_user/create/createAppUser.handler';
+import { DeleteAppUserHandler } from './application/commands/app_user/delete/deleteAppUser.handler';
 const CommandHandlers = [
   CreateUserHandler,
   UpdateUserPasswordHandler,
@@ -35,6 +43,8 @@ const CommandHandlers = [
   UpdateUserTokenPublicKeyHandler,
   CreateUserAppHandler,
   DeleteUserAppHandler,
+  CreateAppUserHandler,
+  DeleteAppUserHandler,
 ];
 
 import { GetUserByMobileHandler } from './application/queries/user/getUserByMobile.handler';
@@ -46,6 +56,7 @@ import { FindUserAppByUserIdAndAppIdHandler } from './application/queries/user_a
 import { FindAppsByUserIdHandler } from './application/queries/user_app/findAppsByUserId.handler';
 import { FindUserTokenByAccessTokenHandler } from './application/queries/user_token/findByAccessToken.handler';
 import { FindUserTokenByPublicKeyHandler } from './application/queries/user_token/findByPublicKey.handler';
+import { FindAppUserByUserIdAndAppIdHandler } from './application/queries/app_user/findByUserIdAndAppId.handler';
 const QueryHandlers = [
   GetUserByMobileHandler,
   GetUserByUsernameHandler,
@@ -56,6 +67,7 @@ const QueryHandlers = [
   FindAppsByUserIdHandler,
   FindUserTokenByAccessTokenHandler,
   FindUserTokenByPublicKeyHandler,
+  FindAppUserByUserIdAndAppIdHandler,
 ];
 
 import { UserMapper } from './infrastructure/mappers/user.mapper';

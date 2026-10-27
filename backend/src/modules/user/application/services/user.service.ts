@@ -37,6 +37,7 @@ import { FindUserAppByUserIdAndAppIdQuery } from '../queries/user_app/findByUser
 import { FindAppsByUserIdQuery } from '../queries/user_app/findAppsByUserId.query';
 import { FindUserTokenByAccessTokenQuery } from '../queries/user_token/findByAccessToken.query';
 import { FindUserTokenByPublicKeyQuery } from '../queries/user_token/findByPublicKey.query';
+import { FindAppUserByUserIdAndAppIdQuery } from '../queries/app_user/findByUserIdAndAppId.query';
 import { User } from '../../domain/entities/user.entity';
 import { UserToken } from '../../domain/entities/userToken.entity';
 import { App } from '../../../app/domain/entities/app.entity';
@@ -45,6 +46,8 @@ import { UpdateUserStatusCommand } from '../commands/user/update/updateStatus.co
 import { CreateUserCommand } from '../commands/user/create/createUser.command';
 import { CreateUserAppCommand } from '../commands/user_app/create/createUserApp.command';
 import { DeleteUserAppCommand } from '../commands/user_app/delete/deleteUserApp.command';
+import { DeleteAppUserCommand } from '../commands/app_user/delete/deleteAppUser.command';
+import { CreateAppUserCommand } from '../commands/app_user/create/createAppUser.command';
 import { UpdateUserTokenPublicKeyCommand } from '../commands/user_token/updatePublicKey/updatePublicKey.command';
 import {
   ValidateUserAppAccessInterface,
@@ -165,6 +168,32 @@ export class UserService implements UserServiceImpl {
       status: false,
     };
   }
+  private httpExceptionToRpc(e: HttpException): RpcException {
+    const status = e.getStatus();
+    const body = e.getResponse();
+    const message =
+      typeof body === 'string'
+        ? body
+        : ((body as { error?: string; message?: string })?.error ??
+          (body as { message?: string })?.message ??
+          e.message);
+
+    let code = GrpcStatus.INTERNAL;
+    if (status === HttpStatus.BAD_REQUEST) {
+      code = GrpcStatus.INVALID_ARGUMENT;
+    } else if (status === HttpStatus.FORBIDDEN) {
+      code = GrpcStatus.PERMISSION_DENIED;
+    } else if (status === HttpStatus.NOT_FOUND) {
+      code = GrpcStatus.NOT_FOUND;
+    } else if (status === HttpStatus.CONFLICT) {
+      code = GrpcStatus.ALREADY_EXISTS;
+    }
+
+    return new RpcException({
+      code,
+      message: Array.isArray(message) ? message.join(', ') : String(message),
+    });
+  }
   async create(data: CreateUserDto): Promise<UserDto> {
     const app = await this.requireActiveApp(data.accessToken);
     const existing = await this.resolveExistingUser({
@@ -284,33 +313,6 @@ export class UserService implements UserServiceImpl {
         message: 'Failed to create user',
       });
     }
-  }
-
-  private httpExceptionToRpc(e: HttpException): RpcException {
-    const status = e.getStatus();
-    const body = e.getResponse();
-    const message =
-      typeof body === 'string'
-        ? body
-        : ((body as { error?: string; message?: string })?.error ??
-          (body as { message?: string })?.message ??
-          e.message);
-
-    let code = GrpcStatus.INTERNAL;
-    if (status === HttpStatus.BAD_REQUEST) {
-      code = GrpcStatus.INVALID_ARGUMENT;
-    } else if (status === HttpStatus.FORBIDDEN) {
-      code = GrpcStatus.PERMISSION_DENIED;
-    } else if (status === HttpStatus.NOT_FOUND) {
-      code = GrpcStatus.NOT_FOUND;
-    } else if (status === HttpStatus.CONFLICT) {
-      code = GrpcStatus.ALREADY_EXISTS;
-    }
-
-    return new RpcException({
-      code,
-      message: Array.isArray(message) ? message.join(', ') : String(message),
-    });
   }
 
   async revokeAppAccess(data: RevokeUserAppDto): Promise<boolean> {
@@ -607,6 +609,16 @@ export class UserService implements UserServiceImpl {
       );
       if (!link) {
         return this.invalidUserAppAccess();
+      }
+
+      // When activeSession is off, require a specific App ↔ User association.
+      if (app.activeSession === false) {
+        const appUser = await this.queryBus.execute(
+          new FindAppUserByUserIdAndAppIdQuery(user.id, app.id),
+        );
+        if (!appUser || appUser.access_token !== access_token) {
+          return this.invalidUserAppAccess();
+        }
       }
 
       return {
@@ -995,6 +1007,30 @@ export class UserService implements UserServiceImpl {
         code: GrpcStatus.PERMISSION_DENIED,
         message: 'User does not have access to this application',
       });
+    }
+
+    // When activeSession is off, replace App↔User association (hard delete then create).
+    if (app.activeSession === false) {
+      try {
+        await this.commandBus.execute(
+          new DeleteAppUserCommand(user.id, app.id),
+        );
+        await this.commandBus.execute(
+          new CreateAppUserCommand({
+            userId: user.id,
+            appId: app.id,
+            access_token: userToken.access_token,
+          }),
+        );
+      } catch (error) {
+        if (error instanceof RpcException) {
+          throw error;
+        }
+        throw new RpcException({
+          code: GrpcStatus.INTERNAL,
+          message: 'Failed to create application user',
+        });
+      }
     }
 
     // publicKey is single-use: clear after successful validation

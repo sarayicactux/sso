@@ -15,6 +15,7 @@ model User {
   // Relations
   UserTokens UserToken[]
   UserApps   UserApp[]
+  appUsers   AppUser[]
 
   @@map("users")
 }

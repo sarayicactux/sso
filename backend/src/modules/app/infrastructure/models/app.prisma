@@ -14,9 +14,10 @@ model App {
   deletedAt     DateTime?
 
   // Relations
-  Media    Media?    @relation(fields: [mediaId], references: [id])
-  Admin    Admin     @relation(fields: [adminId], references: [id])
-  UserApps UserApp[]
+  Media         Media?         @relation(fields: [mediaId], references: [id])
+  Admin         Admin          @relation(fields: [adminId], references: [id])
+  UserApps      UserApp[]
+  appUser AppUser[]
 
   @@map("apps")
 }
