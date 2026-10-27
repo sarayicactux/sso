@@ -108,17 +108,19 @@ Upload max size on the controller: `MaxFileSizeValidator` 10_000_000 bytes. MIME
 
 ## App (SSO client)
 
-Live under `modules/app` (`AppsModule`). Entity fields: `title`, `description`, `url`, optional `mediaId`, `adminId`, `status`, `activeSession`, `accessToken`. Many-to-many with `User` via `UserApp`.
+Live under `modules/app` (`AppsModule`). Entity fields: `title`, `description`, `url`, optional `mediaId`, `adminId`, `status`, `activeSession`, `accessToken`. Many-to-many with `User` via `UserApp`. `activeSession === false` enables bound-session checks via `AppUser` (see User).
 
 ## User (end-user SSO)
 
-**Entities:** `User`, `UserApp` (join), `UserToken` (session JWT row).
+**Entities:** `User`, `UserApp` (grant join `users_apps`), `UserToken` (session JWT + disposable `publicKey`), `AppUser` (bound session `app_user`: `userId`, `appId`, `access_token`).
 
-**`UserServiceImpl`:** `create` (app `accessToken` gate; match existing by mobile/email/username; grant `UserApp`), `createViaApp` (gRPC; validate App token then reuse `create`; safe response), `revokeAppAccess` (hard-delete join), `login` (apps in DTO), `updatePassword`, `forgetPassword`, `recoverPassword`, `logOut`, `validateUserAppAccess` (gRPC; `valid` + safe user fields, no throw), `updateStatusByUsernameViaApp` (gRPC), `generateAppPublicKey` (REST; store `UserToken.publicKey`), `getUserByPublicKey` (gRPC; App `accessToken` + `publicKey` → user identity + session `access_token`).
+**`UserServiceImpl`:** `create` (app `accessToken` gate; match existing by mobile/email/username; grant `UserApp`), `createViaApp` (gRPC; validate App token then reuse `create`; safe response), `revokeAppAccess` (hard-delete join), `login` (apps in DTO), `updatePassword`, `forgetPassword`, `recoverPassword`, `logOut`, `validateUserAppAccess` (gRPC; `valid` + safe user fields, no throw; when `activeSession === false` also match `AppUser.access_token`), `updateStatusByUsernameViaApp` (gRPC), `generateAppPublicKey` (REST; store `UserToken.publicKey`), `getUserByPublicKey` (gRPC; App `accessToken` + `publicKey` → user identity + session `access_token`; when `activeSession === false` replace `AppUser` with current token).
 
 **Create rules:** App must exist and `status === true`. Conflicting identity fields across different users → 409. Existing `UserApp` → idempotent. Password hashed bcrypt cost 10.
 
-**Repository interfaces:** `UserRepositoryImpl`, `UserAppRepositoryImpl`, `UserTokenRepositoryImpl`.
+**`activeSession === false` (AppUser):** Written only in `getUserByPublicKey` (hard-delete then create with `access_token`). Required on `validateUserAppAccess` with exact `access_token` match. Not used when `activeSession !== false`.
+
+**Repository interfaces:** `UserRepositoryImpl`, `UserAppRepositoryImpl`, `UserTokenRepositoryImpl`, `AppUserRepositoryImpl`.
 
 ## Interfaces vs entities
 

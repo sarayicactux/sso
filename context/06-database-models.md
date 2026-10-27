@@ -130,7 +130,20 @@ Source: `userApp.prisma`. Join User ↔ App. `@@unique([userId, appId])`. Revoke
 
 ## AppUser → `app_user`
 
-Source: `appUser.prisma`. Join App ↔ User. `@@unique([userId, appId])`. When `GetUserByPublicKey` runs with `App.activeSession === false`, any existing row is hard-deleted then a new row is created (transaction). Required by `ValidateUserAppAccess` when `activeSession === false`. Soft-delete is not used for this workflow. Distinct from `UserApp` (`users_apps`).
+Source: `appUser.prisma`. Distinct from `UserApp` (`users_apps`).
+
+| Field | Prisma | Constraints | Notes |
+|-------|--------|-------------|-------|
+| `id` | `Int` | PK autoincrement | |
+| `userId` | `Int` | FK → `User.id` | |
+| `appId` | `Int` | FK → `App.id` | |
+| `access_token` | `String` | required | Snapshot of the user session JWT bound to this app when `activeSession === false` |
+| timestamps | | | `deletedAt` present |
+| | | `@@unique([userId, appId])` | |
+
+**Lifecycle (commit `check active session`):** On `GetUserByPublicKey` when `App.activeSession === false`, hard-delete any existing `(userId, appId)` row then create a new row with the current `UserToken.access_token`. Soft-delete is not used. When `activeSession !== false`, this table is not written.
+
+**Validate:** `ValidateUserAppAccess` when `activeSession === false` requires an `AppUser` for `(userId, appId)` whose `access_token` equals the request `access_token`.
 
 ## UserToken → `user_tokens`
 
