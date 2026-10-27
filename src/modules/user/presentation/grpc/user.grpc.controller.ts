@@ -1,7 +1,10 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { UserService } from '../../application/services/user.service';
-import { ValidateUserAppAccessInterface } from '../../domain/interfaces/user/ValidateUserAppAccess.interface';
+import {
+  ValidateUserAppAccessInterface,
+  ValidateUserAppAccessResult,
+} from '../../domain/interfaces/user/ValidateUserAppAccess.interface';
 import { UpdateUserStatusByUsernameInterface } from '../../domain/interfaces/user/UpdateUserStatusByUsername.interface';
 import {
   CreateUserViaAppInterface,
@@ -15,12 +18,11 @@ export class UserGrpcController {
   @GrpcMethod('UserGrpcService', 'ValidateUserAppAccess')
   async validateUserAppAccess(
     data: ValidateUserAppAccessInterface,
-  ): Promise<{ valid: boolean }> {
-    const valid = await this.userService.validateUserAppAccess({
+  ): Promise<ValidateUserAppAccessResult> {
+    return this.userService.validateUserAppAccess({
       accessToken: data?.accessToken,
       access_token: data?.access_token,
     });
-    return { valid };
   }
 
   @GrpcMethod('UserGrpcService', 'UpdateUserStatusByUsername')

@@ -44,7 +44,10 @@ import { UpdateUserStatusCommand } from '../commands/user/update/updateStatus.co
 import { CreateUserCommand } from '../commands/user/create/createUser.command';
 import { CreateUserAppCommand } from '../commands/user_app/create/createUserApp.command';
 import { DeleteUserAppCommand } from '../commands/user_app/delete/deleteUserApp.command';
-import { ValidateUserAppAccessInterface } from '../../domain/interfaces/user/ValidateUserAppAccess.interface';
+import {
+  ValidateUserAppAccessInterface,
+  ValidateUserAppAccessResult,
+} from '../../domain/interfaces/user/ValidateUserAppAccess.interface';
 import { UpdateUserStatusInterface } from '../../domain/interfaces/user/UpdateUserStatus.interface';
 import {
   UpdateUserStatusByUsernameInterface,
@@ -540,52 +543,78 @@ export class UserService implements UserServiceImpl {
     return true;
   }
 
+  private invalidUserAppAccess(): ValidateUserAppAccessResult {
+    return {
+      valid: false,
+      id: 0,
+      username: '',
+      email: '',
+      mobile: '',
+      firstName: '',
+      lastName: '',
+      status: false,
+    };
+  }
+
   async validateUserAppAccess(
     data: ValidateUserAppAccessInterface,
-  ): Promise<boolean> {
+  ): Promise<ValidateUserAppAccessResult> {
     try {
       const { accessToken, access_token } = data;
       if (!accessToken || !access_token) {
-        return false;
+        return this.invalidUserAppAccess();
       }
 
       const app = (await this.queryBus.execute(
         new FindAppByAccessTokenQuery(accessToken),
       )) as App | null;
       if (!app || app.status !== true) {
-        return false;
+        return this.invalidUserAppAccess();
       }
 
       const userToken = (await this.queryBus.execute(
         new FindUserTokenByAccessTokenQuery(access_token),
       )) as UserToken | null;
       if (!userToken) {
-        return false;
+        return this.invalidUserAppAccess();
       }
 
       const tokenValues = this.jwt.verifier(access_token);
       if (!tokenValues) {
-        return false;
+        return this.invalidUserAppAccess();
       }
 
       const { userId } = tokenValues as { userId: number };
       if (!userId || userToken.userId !== userId) {
-        return false;
+        return this.invalidUserAppAccess();
       }
 
       const user = (await this.queryBus.execute(
         new GetUserQuery(userId),
       )) as User | null;
       if (!user || !User.canAuthenticate(user)) {
-        return false;
+        return this.invalidUserAppAccess();
       }
 
       const link = await this.queryBus.execute(
         new FindUserAppByUserIdAndAppIdQuery(user.id, app.id),
       );
-      return !!link;
+      if (!link) {
+        return this.invalidUserAppAccess();
+      }
+
+      return {
+        valid: true,
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        mobile: user.mobile,
+        firstName: user.firstName ?? '',
+        lastName: user.lastName ?? '',
+        status: user.status !== false,
+      };
     } catch {
-      return false;
+      return this.invalidUserAppAccess();
     }
   }
 

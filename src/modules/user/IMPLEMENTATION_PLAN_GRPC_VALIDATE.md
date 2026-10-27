@@ -2,7 +2,7 @@
 
 ## Goal
 
-gRPC RPC that checks whether a user session token is valid and the user has access to the app identified by the app `accessToken`. Returns boolean only.
+gRPC RPC that checks whether a user session token is valid and the user has access to the app identified by the app `accessToken`. Returns `{ valid }` plus safe user identity fields (see `IMPLEMENTATION_PLAN_GRPC_VALIDATE_USER_RESPONSE.md`).
 
 ## Decisions
 

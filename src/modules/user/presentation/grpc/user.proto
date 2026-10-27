@@ -15,6 +15,13 @@ message ValidateUserAppAccessRequest {
 
 message ValidateUserAppAccessResponse {
   bool valid = 1;
+  int32 id = 2;
+  string username = 3;
+  string email = 4;
+  string mobile = 5;
+  string firstName = 6;
+  string lastName = 7;
+  bool status = 8;
 }
 
 message UpdateUserStatusByUsernameRequest {
