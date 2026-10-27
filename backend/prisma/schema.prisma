@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Admin {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  password  String
+  email     String    @unique
+  mobile    String    @unique @db.VarChar(11)
+  firstName String?
+  lastName  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  AdminTokens AdminToken[]
+  Logs        Log[]
+  apps        App[]
+
+  @@map("admins")
+}
+
+model AdminToken {
+  id                 Int       @id @default(autoincrement())
+  device             String?
+  ip                 String?
+  access_token       String    @db.VarChar(240)
+  lastConfirmationId Int?      @db.SmallInt
+  adminId            Int
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
+
+  // Relations
+  Admin Admin @relation(fields: [adminId], references: [id])
+
+  @@map("admin_tokens")
+}
+
+enum DatabaseAct {
+  CREATE
+  UPDATE
+  DELETE
+  READ
+}
+
+model Log {
+  id          Int         @id @default(autoincrement())
+  adminId     Int
+  tableName   String?
+  rowId       Int?
+  act         DatabaseAct @default(CREATE)
+  oldData     Json?
+  newData     Json?
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+
+  // Relations
+  Admin Admin @relation(fields: [adminId], references: [id])
+
+  @@map("logs")
+}
+
+model SmsRq {
+  id           Int       @id @default(autoincrement())
+  mobile       String
+  code         Int       @db.SmallInt
+  ip           String
+  lastSentTime DateTime
+  sendCount    Int       @default(1) @db.SmallInt
+  jwtToken     String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  @@map("sms_rqs")
+}
+
+model App {
+  id            Int       @id @default(autoincrement())
+  title         String    @unique
+  description   String
+  url           String    @unique
+  mediaId       Int?
+  adminId       Int
+  status        Boolean?  @default(true)
+  activeSession Boolean?  @default(true)
+  accessToken   String?   @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  // Relations
+  Media    Media?    @relation(fields: [mediaId], references: [id])
+  Admin    Admin     @relation(fields: [adminId], references: [id])
+  UserApps UserApp[]
+
+  @@map("apps")
+}
+
+enum MimeType {
+  IMAGE
+  VIDEO
+  MUSIC
+  DOCUMENT
+  APP
+  OTHER
+}
+
+model Media {
+  id         Int       @id @default(autoincrement())
+  mediaUrl   String
+  ownerId    Int?
+  ownerModel String?
+  mimeType   MimeType
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  apps App[]
+
+  @@map("medias")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  password  String
+  email     String    @unique
+  mobile    String    @unique @db.VarChar(11)
+  firstName String?
+  lastName  String?
+  status    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  UserTokens UserToken[]
+  UserApps   UserApp[]
+
+  @@map("users")
+}
+
+model UserApp {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  appId     Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  User User @relation(fields: [userId], references: [id])
+  App  App  @relation(fields: [appId], references: [id])
+
+  @@unique([userId, appId])
+  @@map("users_apps")
+}
+
+model UserToken {
+  id                 Int       @id @default(autoincrement())
+  device             String?
+  ip                 String?
+  access_token       String    @db.VarChar(240)
+  publicKey          String?   @unique
+  lastConfirmationId Int?      @db.SmallInt
+  userId             Int
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
+
+  // Relations
+  User User @relation(fields: [userId], references: [id])
+
+  @@map("user_tokens")
+}

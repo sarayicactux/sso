@@ -1,0 +1,34 @@
+---
+description: ManualSSO mandatory engineering process — read context before coding
+globs:
+alwaysApply: true
+---
+
+# Project Engineering Rules
+
+Full text: [context/12-engineering-rules.md](../../context/12-engineering-rules.md). Follow it for all work unless the user explicitly approves an exception.
+
+## Before any code change
+
+1. Read relevant `/context/` docs and inspect existing code/patterns (`admin` or `media`).
+2. Use codebase-memory-mcp MCP (`user-codebase-memory-mcp`) when configured — `search_graph` / `get_code_snippet` / etc. If MCP is required but disconnected: **stop**, tell the user, do not pretend you used it.
+3. Do not invent business rules, APIs, schemas, services, deps, or architecture. Priority: task → code → `/context/` → ask.
+4. Smallest safe diff only. No unrelated refactors. No new packages without explicit approval.
+5. New features: resolve ambiguities, write a Markdown implementation plan (phases with objective, files, steps, validation, completion criteria) before coding; update the plan after. Do **not** create test files.
+
+## Architecture (this repo)
+
+`Controller → application service → CommandBus | QueryBus → handler → infrastructure repository → PrismaService → PostgreSQL`. Nest 12 + Prisma 7. CQRS is used. Live modules: Admin and Media. App is domain-only until implemented. See `/context/01-architecture.md`.
+
+## Persistence
+
+Edit module `infrastructure/models/*.prisma`, then `npm run build:schema` and `prisma generate`. Do not run `build:schema` while `app.prisma` is invalid. Do not hand-maintain `prisma/schema.prisma`.
+
+## After changes
+
+- Enforce business rules/validation/auth on the **server** (`@Admin()` on protected routes).
+- Do **not** create or run unit/integration/e2e test files for this project (§14 in `context/12-engineering-rules.md`).
+- Build/verify API behavior; update `backend/README.md` (run/setup only — details stay in `/context/`).
+- Re-index via codebase-memory-mcp MCP; say so if MCP unavailable.
+- Final review checklist: §25 in `context/12-engineering-rules.md`.
+- Do not copy secrets from `main.ts`, `tools.helper.ts`, or `.env` into docs or chat.

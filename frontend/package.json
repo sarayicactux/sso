@@ -1,0 +1,26 @@
+{
+  "name": "sso-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.8",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.2"
+  },
+  "dependencies": {
+    "@vicons/carbon": "^0.13.0",
+    "@vicons/ionicons5": "^0.13.0",
+    "axios": "^1.18.1",
+    "naive-ui": "^2.44.1",
+    "pinia": "^3.0.4",
+    "vue": "^3.5.42",
+    "vue-i18n": "^9.14.5",
+    "vue-router": "^4.6.4"
+  }
+}

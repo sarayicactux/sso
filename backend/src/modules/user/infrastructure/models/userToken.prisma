@@ -1,0 +1,16 @@
+model UserToken {
+  id                  Int       @id @default(autoincrement())
+  device              String?
+  ip                  String?
+  access_token        String @db.VarChar(240)
+  publicKey           String?   @unique
+  lastConfirmationId  Int? @db.SmallInt
+  userId             Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt           DateTime? 
+  
+  // Relations
+  User    User   @relation(fields: [userId], references: [id])
+  @@map("user_tokens")
+}

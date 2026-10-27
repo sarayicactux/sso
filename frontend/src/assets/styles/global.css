@@ -1,0 +1,195 @@
+:root {
+  --primary-color: #35c0a3;
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 64px;
+  --header-height: 56px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+[dir="rtl"] body,
+[dir="rtl"] {
+  font-family: 'Vazir', 'Tahoma', 'Arial', sans-serif;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.page-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+[dir="rtl"] .page-header {
+  text-align: right;
+}
+
+.responsive-hide-sm { display: block; }
+.responsive-show-sm { display: none; }
+
+@media (max-width: 640px) {
+  .responsive-hide-sm { display: none !important; }
+  .responsive-show-sm { display: block !important; }
+}
+
+.table-scroll-wrapper {
+  max-height: calc(100vh - 230px);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll-wrapper > .n-data-table {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Wrapper must not scroll vertically; pagination stays outside the scrollport. */
+.table-scroll-wrapper .n-data-table-wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: hidden !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-scroll-wrapper .n-data-table-base-table {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Scroll only the table content (n-data-table-table lives inside this body). */
+.table-scroll-wrapper .n-data-table-base-table-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: calc(100vh - 280px) !important;
+  overflow: auto !important;
+}
+
+.table-scroll-wrapper .n-data-table-base-table-body > .n-scrollbar-container {
+  overflow: visible !important;
+  height: auto !important;
+  max-height: none !important;
+  min-height: 0 !important;
+}
+
+.table-scroll-wrapper .n-data-table-thead,
+.table-scroll-wrapper .n-data-table-th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.table-scroll-wrapper .n-data-table__pagination {
+  flex: 0 0 auto;
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  margin-top: 12px;
+  background-color: var(--n-merged-td-color, var(--n-color, #fff));
+}
+
+/* Operations / last column stays pinned at the row end during horizontal scroll. */
+.table-scroll-wrapper .n-data-table .n-data-table-th--last,
+.table-scroll-wrapper .n-data-table .n-data-table-td--last-col {
+  position: sticky;
+  inset-inline-end: 0;
+  z-index: 2;
+  background-color: var(--n-merged-td-color);
+}
+
+.table-scroll-wrapper .n-data-table .n-data-table-th--last {
+  top: 0;
+  z-index: 5;
+  background-color: var(--n-merged-th-color);
+}
+
+.table-scroll-wrapper .n-data-table-tr:hover > .n-data-table-td--last-col {
+  background-color: var(--n-merged-td-color-hover);
+}
+
+.table-scroll-wrapper .n-data-table-tr--striped > .n-data-table-td--last-col {
+  background-color: var(--n-merged-td-color-striped);
+}
+
+.table-scroll-wrapper .n-data-table-tr--striped:hover > .n-data-table-td--last-col {
+  background-color: var(--n-merged-td-color-hover);
+}
+
+.table-scroll-wrapper[dir="ltr"] .n-data-table .n-data-table-th--last,
+.table-scroll-wrapper[dir="ltr"] .n-data-table .n-data-table-td--last-col {
+  box-shadow: -6px 0 8px -6px rgba(15, 15, 15, 0.16);
+}
+
+.table-scroll-wrapper[dir="rtl"] .n-data-table .n-data-table-th--last,
+.table-scroll-wrapper[dir="rtl"] .n-data-table .n-data-table-td--last-col {
+  box-shadow: 6px 0 8px -6px rgba(15, 15, 15, 0.16);
+}
+
+[dir="rtl"] .n-layout-sider--collapsed .n-menu-item-content {
+  padding-right: 5px !important;
+  padding-left: 0 !important;
+}
+
+[dir="rtl"] .n-layout-toggle-button {
+  left: 0 !important;
+  right: auto !important;
+  transform: translateX(-50%) translateY(-50%) !important;
+}
+
+/* Naive UI dropdown/popover positioning in RTL (dropdown lacks full RTL support) */
+[dir="rtl"] .v-binder-follower-content {
+  left: 0 !important;
+  right: auto !important;
+}
+
+/* Modal dialog actions: Naive UI uses margin-right between buttons (LTR-only) */
+[dir="rtl"] .n-dialog__action {
+  gap: var(--n-action-space, 12px);
+}
+
+[dir="rtl"] .n-dialog__action > * {
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Card modal footers (n-space without Naive RTL plugin) */
+[dir="rtl"] .n-modal .n-card__footer .n-space:not(.n-space--rtl) {
+  gap: 12px;
+}
+
+[dir="rtl"] .n-modal .n-card__footer .n-space:not(.n-space--rtl) > div[role="none"] {
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+}
+
+.grid-file-link {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.grid-file-link:hover {
+  text-decoration: underline;
+}
