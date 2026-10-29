@@ -1,6 +1,5 @@
 import {
   IsNotEmpty,
-  IsEmail,
   MinLength,
   IsMobilePhone,
   IsOptional,
@@ -104,9 +103,9 @@ export class CreateUserDto implements CreateUserInterface {
   @IsNotEmpty()
   username: string;
 
-  @ApiProperty()
-  @IsEmail()
-  email: string;
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  email?: string | null;
 
   @ApiProperty()
   @IsNumberString()
@@ -161,9 +160,9 @@ export class UserDto implements Partial<User> {
   @IsNotEmpty()
   lastName: string;
 
-  @ApiProperty()
-  @IsEmail()
-  email: string;
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  email?: string | null;
 
   @ApiProperty()
   @IsMobilePhone()
@@ -196,7 +195,7 @@ export class UserDto implements Partial<User> {
     username: string;
     firstName: string;
     lastName: string;
-    email: string;
+    email?: string | null;
     mobile: string;
     status?: boolean;
     access_token?: string;
@@ -208,7 +207,7 @@ export class UserDto implements Partial<User> {
     this.username = data.username;
     this.firstName = data.firstName;
     this.lastName = data.lastName;
-    this.email = data.email;
+    this.email = data.email ?? null;
     this.mobile = data.mobile;
     this.status = data.status !== false;
     this.access_token = data.access_token;

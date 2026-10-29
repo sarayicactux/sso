@@ -3,7 +3,7 @@ export class User {
   username: string;
   firstName: string;
   lastName: string;
-  email: string;
+  email?: string | null;
   mobile: string;
   password?: string;
   status: boolean;
@@ -16,7 +16,7 @@ export class User {
     username: string;
     firstName?: string;
     lastName?: string;
-    email: string;
+    email?: string | null;
     mobile: string;
     password?: string;
     status?: boolean;

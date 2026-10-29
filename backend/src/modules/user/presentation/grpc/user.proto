@@ -11,7 +11,7 @@ service UserGrpcService {
 
 message ValidateUserAppAccessRequest {
   string accessToken = 1;
-  string access_token = 2;
+  string userAccessToken = 2;
 }
 
 message ValidateUserAppAccessResponse {

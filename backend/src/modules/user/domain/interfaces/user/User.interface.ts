@@ -3,7 +3,7 @@ export interface UserInterface {
   username: string;
   firstName: string;
   lastName: string;
-  email: string;
+  email?: string | null;
   mobile: string;
   status: boolean;
   access_token?: string;

@@ -18,7 +18,7 @@ export class UserRepository implements UserRepositoryImpl {
     const user = await this.prisma.user.create({
       data: {
         username: data.username,
-        email: data.email,
+        email: data.email?.trim() || null,
         mobile: data.mobile,
         firstName: data.firstName,
         lastName: data.lastName,
@@ -46,13 +46,6 @@ export class UserRepository implements UserRepositoryImpl {
   async findByUsername(username: string): Promise<User | null> {
     const user = await this.prisma.findOne('user', {
       where: { username },
-    });
-    return user as User | null;
-  }
-
-  async findByEmail(email: string): Promise<User | null> {
-    const user = await this.prisma.findOne('user', {
-      where: { email },
     });
     return user as User | null;
   }

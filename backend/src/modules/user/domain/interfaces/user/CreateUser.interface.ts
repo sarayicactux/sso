@@ -1,6 +1,6 @@
 export interface CreateUserInterface {
   username: string;
-  email: string;
+  email?: string | null;
   mobile: string;
   firstName?: string;
   lastName?: string;

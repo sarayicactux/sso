@@ -50,7 +50,6 @@ const CommandHandlers = [
 import { GetUserByMobileHandler } from './application/queries/user/getUserByMobile.handler';
 import { GetUserByUsernameHandler } from './application/queries/user/getUserByUsername.handler';
 import { GetUserHandler } from './application/queries/user/getUser.handler';
-import { GetUserByEmailHandler } from './application/queries/user/getUserByEmail.handler';
 import { FindAllUsersWithAppsHandler } from './application/queries/user/findAllWithApps.handler';
 import { FindUserAppByUserIdAndAppIdHandler } from './application/queries/user_app/findByUserIdAndAppId.handler';
 import { FindAppsByUserIdHandler } from './application/queries/user_app/findAppsByUserId.handler';
@@ -60,7 +59,6 @@ import { FindAppUserByUserIdAndAppIdHandler } from './application/queries/app_us
 const QueryHandlers = [
   GetUserByMobileHandler,
   GetUserByUsernameHandler,
-  GetUserByEmailHandler,
   GetUserHandler,
   FindAllUsersWithAppsHandler,
   FindUserAppByUserIdAndAppIdHandler,

@@ -14,6 +14,7 @@ export class AppUserRepository implements AppUserRepositoryImpl {
       data: {
         userId: data.userId,
         appId: data.appId,
+        access_token: data.access_token,
       },
     });
     return row as AppUser;

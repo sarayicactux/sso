@@ -25,7 +25,7 @@ export class UserGrpcController {
   ): Promise<ValidateUserAppAccessResult> {
     return this.userService.validateUserAppAccess({
       accessToken: data?.accessToken,
-      access_token: data?.access_token,
+      userAccessToken: data?.userAccessToken,
     });
   }
 

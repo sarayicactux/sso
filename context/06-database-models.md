@@ -118,7 +118,8 @@ Source: `backend/src/modules/user/infrastructure/models/user.prisma`
 | Field | Prisma | Constraints | Notes |
 |-------|--------|-------------|-------|
 | `id` | `Int` | PK autoincrement | |
-| `username` / `email` / `mobile` | `String` | each `@unique`; mobile `@db.VarChar(11)` | Existence match uses any of these |
+| `username` / `mobile` | `String` | each `@unique`; mobile `@db.VarChar(11)` | Existence match uses mobile or username |
+| `email` | `String?` | optional, not unique | Not used for identity matching |
 | `password` | `String` | required | bcrypt hash |
 | `firstName` / `lastName` | `String?` | | |
 | timestamps | | | |

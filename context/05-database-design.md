@@ -97,10 +97,11 @@ Keep the Prisma enum and the TypeScript enum in sync. `build:schema` will emit d
 | Model | Unique fields |
 |-------|----------------|
 | `Admin` | `username`, `email`, `mobile` |
+| `User` | `username`, `mobile` (`email` optional, not unique) |
 | `AdminToken` | none on `access_token` (column is `VarChar(240)`, not `@unique`) |
 | `SmsRq` | none. Lookup is `mobile` + `ip` via `findFirst` |
 | `Media` | none |
-| `App` draft | `title`, `url`, `accessToken` marked `@unique` in the fragment only |
+| `App` | `title`, `url`, `accessToken` |
 
 Login stores JWTs in `access_token`. Length must stay within 240 characters. A longer token fails the insert.
 

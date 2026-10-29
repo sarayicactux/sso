@@ -1,6 +1,6 @@
 export interface ValidateUserAppAccessInterface {
   accessToken: string;
-  access_token: string;
+  userAccessToken: string;
 }
 
 /** Safe gRPC ValidateUserAppAccess response (UserDto without tokens/apps/timestamps). */

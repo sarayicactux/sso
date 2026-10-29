@@ -13,7 +13,6 @@ export interface UserRepositoryImpl {
   findById(id: number): Promise<User | null>;
   findByMobile(mobile: string): Promise<User | null>;
   findByUsername(username: string): Promise<User | null>;
-  findByEmail(email: string): Promise<User | null>;
   findAllWithApps(): Promise<UserWithApps[]>;
   updatePassword(password: string, id: number): Promise<boolean>;
   updateStatus(data: UpdateUserStatusInterface): Promise<User>;

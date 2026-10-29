@@ -29,7 +29,6 @@ import { FindAppByAccessTokenQuery } from '../../../app/application/queries/find
 import { FindAppByIdQuery } from '../../../app/application/queries/findById.query';
 
 import { GetUserByMobileQuery } from '../queries/user/getUserByMobile.query';
-import { GetUserByEmailQuery } from '../queries/user/getUserByEmail.query';
 import { GetUserByUsernameQuery } from '../queries/user/getUserByUsername.query';
 import { GetUserQuery } from '../queries/user/getUser.query';
 import { FindAllUsersWithAppsQuery } from '../queries/user/findAllWithApps.query';
@@ -124,20 +123,16 @@ export class UserService implements UserServiceImpl {
 
   private async resolveExistingUser(params: {
     mobile: string;
-    email: string;
     username: string;
   }): Promise<User | null> {
     const byMobile = (await this.queryBus.execute(
       new GetUserByMobileQuery(params.mobile),
     )) as User | null;
-    const byEmail = (await this.queryBus.execute(
-      new GetUserByEmailQuery(params.email),
-    )) as User | null;
     const byUsername = (await this.queryBus.execute(
       new GetUserByUsernameQuery(params.username),
     )) as User | null;
 
-    const found = [byMobile, byEmail, byUsername].filter((u): u is User => !!u);
+    const found = [byMobile, byUsername].filter((u): u is User => !!u);
     if (found.length === 0) return null;
 
     const ids = new Set(found.map((u) => u.id));
@@ -198,7 +193,6 @@ export class UserService implements UserServiceImpl {
     const app = await this.requireActiveApp(data.accessToken);
     const existing = await this.resolveExistingUser({
       mobile: data.mobile,
-      email: data.email,
       username: data.username,
     });
 
@@ -219,7 +213,7 @@ export class UserService implements UserServiceImpl {
       user = (await this.commandBus.execute(
         new CreateUserCommand({
           username: data.username,
-          email: data.email,
+          email: data.email?.trim() || null,
           mobile: data.mobile,
           firstName: data.firstName,
           lastName: data.lastName,
@@ -249,18 +243,17 @@ export class UserService implements UserServiceImpl {
     data: CreateUserViaAppInterface,
   ): Promise<CreateUserViaAppResult> {
     const username = data?.username?.trim();
-    const email = data?.email?.trim();
+    const email = data?.email?.trim() || null;
     const mobile = data?.mobile?.trim();
     const password = data?.password;
     const accessToken = data?.accessToken?.trim();
     const firstName = data?.firstName?.trim() || undefined;
     const lastName = data?.lastName?.trim() || undefined;
 
-    if (!username || !email || !mobile || !password || !accessToken) {
+    if (!username || !mobile || !password || !accessToken) {
       throw new RpcException({
         code: GrpcStatus.INVALID_ARGUMENT,
-        message:
-          'username, email, mobile, password, and accessToken are required',
+        message: 'username, mobile, password, and accessToken are required',
       });
     }
     if (password.length < 6) {
@@ -295,7 +288,7 @@ export class UserService implements UserServiceImpl {
         success: true,
         id: user.id,
         username: user.username,
-        email: user.email,
+        email: user.email ?? '',
         mobile: user.mobile,
         firstName: user.firstName ?? '',
         lastName: user.lastName ?? '',
@@ -568,10 +561,7 @@ export class UserService implements UserServiceImpl {
     data: ValidateUserAppAccessInterface,
   ): Promise<ValidateUserAppAccessResult> {
     try {
-      const { accessToken, access_token } = data;
-      if (!accessToken || !access_token) {
-        return this.invalidUserAppAccess();
-      }
+      const { accessToken, userAccessToken } = data;
 
       const app = (await this.queryBus.execute(
         new FindAppByAccessTokenQuery(accessToken),
@@ -581,13 +571,13 @@ export class UserService implements UserServiceImpl {
       }
 
       const userToken = (await this.queryBus.execute(
-        new FindUserTokenByAccessTokenQuery(access_token),
+        new FindUserTokenByAccessTokenQuery(userAccessToken),
       )) as UserToken | null;
       if (!userToken) {
         return this.invalidUserAppAccess();
       }
 
-      const tokenValues = this.jwt.verifier(access_token);
+      const tokenValues = this.jwt.verifier(userAccessToken);
       if (!tokenValues) {
         return this.invalidUserAppAccess();
       }
@@ -616,7 +606,7 @@ export class UserService implements UserServiceImpl {
         const appUser = await this.queryBus.execute(
           new FindAppUserByUserIdAndAppIdQuery(user.id, app.id),
         );
-        if (!appUser || appUser.access_token !== access_token) {
+        if (!appUser || appUser.access_token !== userAccessToken) {
           return this.invalidUserAppAccess();
         }
       }
